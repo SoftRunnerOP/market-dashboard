@@ -2,40 +2,35 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mr X Pro Market</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-black text-white p-4">
     <div class="max-w-xl mx-auto">
-        <h1 class="text-xl font-bold mb-4 text-blue-500">Live Dashboard</h1>
-        <div class="grid grid-cols-2 gap-4 mb-4">
-            <div class="bg-slate-900 p-4 rounded-xl border border-slate-800"><p class="text-[10px] text-slate-500">F&G INDEX</p><p id="fng" class="text-lg font-bold">--</p></div>
-            <div class="bg-slate-900 p-4 rounded-xl border border-slate-800"><p class="text-[10px] text-slate-500">BTC DOM</p><p id="dom" class="text-lg font-bold">--</p></div>
-        </div>
+        <h1 class="text-xl font-bold mb-6 text-blue-500">Live Prices</h1>
         <div id="grid" class="grid grid-cols-1 gap-4"></div>
     </div>
     <script>
         async function update() {
             try {
-                const res = await fetch("data.json?t=" + new Date().getTime());
-                const data = await res.json();
-                document.getElementById('fng').innerText = data.fng;
-                document.getElementById('dom').innerText = data.dom;
-                
+                const res = await fetch("https://api.binance.com/api/v3/ticker/24hr");
+                const tickers = await res.json();
                 const grid = document.getElementById('grid');
                 grid.innerHTML = '';
-                for (const [sym, info] of Object.entries(data.prices)) {
-                    const color = info.change >= 0 ? 'text-green-500' : 'text-red-500';
-                    const price = sym === 'DOGE' ? info.price.toFixed(5) : info.price.toLocaleString();
+                const targets = ["BTCUSDT", "ETHUSDT", "DOGEUSDT"];
+                
+                tickers.filter(t => targets.includes(t.symbol)).forEach(t => {
+                    const price = parseFloat(t.lastPrice);
+                    const sym = t.symbol.replace('USDT', '');
+                    const priceDisplay = sym === 'DOGE' ? price.toFixed(5) : price.toLocaleString();
                     grid.innerHTML += `
                         <div class="bg-slate-900 p-5 rounded-xl border border-slate-800 flex justify-between items-center">
                             <span class="text-slate-400 font-bold">${sym}</span>
-                            <span class="font-bold text-lg">$${price} <span class="${color} text-sm">(${info.change.toFixed(2)}%)</span></span>
+                            <span class="font-bold text-lg">$${priceDisplay}</span>
                         </div>
                     `;
-                }
-            } catch(e) { console.error(e); }
+                });
+            } catch(e) { document.getElementById('grid').innerHTML = '<p class="text-red-500">Sync Error</p>'; }
         }
         update();
         setInterval(update, 5000);
