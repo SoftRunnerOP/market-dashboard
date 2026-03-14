@@ -3,47 +3,45 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mr X Pro Dashboard</title>
+    <title>Mr X Market Dash</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-black text-white p-4">
     <div class="max-w-xl mx-auto">
         <h1 class="text-xl font-bold mb-6 text-blue-500">Live Dashboard</h1>
-        <div id="grid" class="grid grid-cols-1 gap-4">
-            <p class="text-slate-500 text-center py-10">Syncing data...</p>
-        </div>
+        <div id="status" class="text-[10px] text-slate-500 mb-4">Starting...</div>
+        <div id="grid" class="grid grid-cols-1 gap-4"></div>
     </div>
     <script>
         async function update() {
+            const grid = document.getElementById('grid');
+            const status = document.getElementById('status');
+            
             try {
-                // Now fetching from data.json that GitHub Actions generates!
-                const res = await fetch("data.json?t=" + new Date().getTime());
-                const data = await res.json();
-                const grid = document.getElementById('grid');
-                grid.innerHTML = '';
+                status.innerText = 'Fetching...';
+                const symbols = ["BTCUSDT", "ETHUSDT", "DOGEUSDT"];
+                let html = '';
                 
-                // Add Metrics
-                grid.innerHTML += `
-                    <div class="grid grid-cols-2 gap-4 mb-2">
-                        <div class="bg-slate-900 p-4 rounded-xl border border-slate-800"><p class="text-[10px] text-slate-500">F&G</p><p class="text-xl font-bold">${data.fng}</p></div>
-                        <div class="bg-slate-900 p-4 rounded-xl border border-slate-800"><p class="text-[10px] text-slate-500">BTC DOM</p><p class="text-xl font-bold">${data.dom.toFixed(1)}%</p></div>
-                    </div>
-                `;
-
-                // Add Assets
-                for (const [sym, info] of Object.entries(data.prices)) {
-                    const color = info.change >= 0 ? 'text-green-500' : 'text-red-500';
-                    grid.innerHTML += `
+                for (const sym of symbols) {
+                    const res = await fetch(`https://api.binance.com/api/v3/ticker/price?symbol=${sym}`);
+                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                    const data = await res.json();
+                    
+                    html += `
                         <div class="bg-slate-900 p-5 rounded-xl border border-slate-800 flex justify-between items-center">
-                            <span class="text-slate-400 font-bold">${sym}</span>
-                            <span class="font-bold text-lg">$${info.price.toLocaleString(undefined, {minimumFractionDigits: 2})} <span class="${color} text-sm">(${info.change.toFixed(2)}%)</span></span>
+                            <span class="text-slate-400 font-bold">${sym.replace('USDT', '')}</span>
+                            <span class="font-bold text-lg">$${parseFloat(data.price).toLocaleString()}</span>
                         </div>
                     `;
                 }
-            } catch (e) { console.error(e); }
+                grid.innerHTML = html;
+                status.innerText = 'Live';
+            } catch (e) {
+                status.innerText = 'Error: ' + e.message;
+            }
         }
         update();
-        setInterval(update, 30000);
+        setInterval(update, 10000);
     </script>
 </body>
 </html>
