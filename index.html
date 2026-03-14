@@ -8,33 +8,34 @@
 </head>
 <body class="bg-black text-white p-4">
     <div class="max-w-xl mx-auto">
-        <h1 class="text-xl font-bold mb-6 text-blue-500">Live Dashboard</h1>
+        <h1 class="text-xl font-bold mb-6 text-blue-500">Live Prices</h1>
         <div id="grid" class="grid grid-cols-1 gap-4"></div>
     </div>
     <script>
         async function update() {
+            const symbols = ["BTCUSDT", "ETHUSDT", "DOGEUSDT"];
+            const grid = document.getElementById('grid');
+            grid.innerHTML = '<p class="text-slate-500">Loading...</p>';
+            
             try {
-                // Binance API works directly in browser
-                const symbols = ["BTCUSDT", "ETHUSDT", "DOGEUSDT"];
-                const grid = document.getElementById('grid');
-                grid.innerHTML = '';
-                
+                let html = '';
                 for (const sym of symbols) {
                     const res = await fetch(`https://api.binance.com/api/v3/ticker/price?symbol=${sym}`);
                     const data = await res.json();
-                    grid.innerHTML += `
+                    html += `
                         <div class="bg-slate-900 p-5 rounded-xl border border-slate-800 flex justify-between">
-                            <span class="text-slate-400">${sym.replace('USDT', '')}</span>
-                            <span class="font-bold">$${parseFloat(data.price).toLocaleString()}</span>
+                            <span class="text-slate-400 font-bold">${sym.replace('USDT', '')}</span>
+                            <span class="font-bold text-lg">$${parseFloat(data.price).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 4})}</span>
                         </div>
                     `;
                 }
+                grid.innerHTML = html;
             } catch (e) {
-                document.body.innerHTML = 'Error: ' + e.message;
+                grid.innerHTML = '<p class="text-red-500">Error: Could not load prices.</p>';
             }
         }
         update();
-        setInterval(update, 5000);
+        setInterval(update, 10000);
     </script>
 </body>
 </html>
