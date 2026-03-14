@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mr X Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background-color: #0f172a; color: white; }
+        .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(10px); }
+    </style>
+</head>
+<body class="p-8">
+    <h1 class="text-3xl font-bold mb-8 text-blue-400">Market Dashboard</h1>
+    <div id="grid" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <!-- Cards injected by JS -->
+    </div>
+    <script>
+        async function update() {
+            const res = await fetch("https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,dogecoin&vs_currencies=usd&include_24hr_change=true");
+            const data = await res.json();
+            const grid = document.getElementById('grid');
+            grid.innerHTML = '';
+            for (const [id, info] of Object.entries(data)) {
+                const color = info.usd_24h_change >= 0 ? 'text-green-500' : 'text-red-500';
+                grid.innerHTML += `
+                    <div class="glass p-6 rounded-xl border border-slate-700">
+                        <h2 class="text-xl uppercase tracking-widest text-slate-400">${id}</h2>
+                        <p class="text-4xl font-bold my-2">$${info.usd.toLocaleString()}</p>
+                        <p class="text-lg ${color}">${info.usd_24h_change.toFixed(2)}%</p>
+                    </div>
+                `;
+            }
+        }
+        update();
+        setInterval(update, 30000);
+    </script>
+</body>
+</html>
