@@ -15,8 +15,10 @@ def to_float(val, default=0.0):
         return default
 
 
-def compute_signal(fng_value: int, btc_change: float, dom_value: float) -> str:
+def compute_signal(fng_value: int, btc_change: float, dom_value: float, funding_btc: float) -> str:
     score = 50
+
+    # Fear/greed (contrarian)
     if fng_value <= 20:
         score += 20
     elif fng_value <= 35:
@@ -26,15 +28,23 @@ def compute_signal(fng_value: int, btc_change: float, dom_value: float) -> str:
     elif fng_value >= 65:
         score -= 10
 
+    # BTC momentum
     if btc_change >= 2:
         score += 10
     elif btc_change <= -2:
         score -= 10
 
+    # Dominance pressure on alts
     if dom_value >= 58:
         score -= 10
     elif dom_value <= 45:
         score += 10
+
+    # Funding overheating
+    if funding_btc > 0.03:
+        score -= 10
+    elif funding_btc < -0.01:
+        score += 5
 
     if score >= 70:
         return "STRONG BUY"
@@ -57,6 +67,10 @@ def fetch_data():
         "dxy_change": 0.0,
         "alt_season": "N/A",
         "signal": "NEUTRAL",
+        "funding_btc": 0.0,
+        "oi_btc": 0.0,
+        "oi_btc_change": 0.0,
+        "btc_range_24h": 0.0,
         "prices": {},
         "updated": time.strftime("%H:%M:%S")
     }
@@ -70,8 +84,9 @@ def fetch_data():
             pass
 
     old_dom = to_float(data.get("dom", 56.0), 56.0)
+    old_oi = to_float(data.get("oi_btc", 0.0), 0.0)
 
-    # 1) Binance prices
+    # 1) Binance spot prices
     try:
         r = requests.get("https://api.binance.com/api/v3/ticker/24hr", timeout=10)
         tickers = r.json() if r.ok else []
@@ -83,10 +98,15 @@ def fetch_data():
                     "price": float(t['lastPrice']),
                     "change": float(t['priceChangePercent'])
                 }
+                if sym == "BTC":
+                    hi = float(t.get('highPrice', 0) or 0)
+                    lo = float(t.get('lowPrice', 0) or 0)
+                    op = float(t.get('openPrice', 0) or 0)
+                    data['btc_range_24h'] = ((hi - lo) / op * 100) if op else 0.0
     except Exception:
         pass
 
-    # 2) CoinGecko global (dominance)
+    # 2) CoinGecko global dominance
     try:
         headers = {'x-cg-demo-api-key': API_KEY}
         g = requests.get("https://api.coingecko.com/api/v3/global", headers=headers, timeout=10).json()
@@ -97,7 +117,7 @@ def fetch_data():
     except Exception:
         pass
 
-    # 3) F&G index + 24h delta (via last two points)
+    # 3) Fear & Greed + delta
     try:
         f = requests.get("https://api.alternative.me/fng/?limit=2", timeout=10).json()
         now_v = float(f['data'][0]['value'])
@@ -107,9 +127,8 @@ def fetch_data():
     except Exception:
         pass
 
-    # 4) DXY + daily delta from open/close (stooq)
+    # 4) DXY + daily delta from open/close
     try:
-        # Example: Symbol,Date,Time,Open,High,Low,Close,Volume
         dxy_csv = requests.get("https://stooq.com/q/l/?s=dx.f&f=sd2t2ohlcv&h&e=csv", timeout=10).text.strip().splitlines()
         if len(dxy_csv) >= 2:
             row = dxy_csv[1].split(',')
@@ -120,11 +139,27 @@ def fetch_data():
     except Exception:
         pass
 
-    # 5) Composite signal
+    # 5) Funding + OI from Binance futures
+    try:
+        p = requests.get("https://fapi.binance.com/fapi/v1/premiumIndex?symbol=BTCUSDT", timeout=10).json()
+        data['funding_btc'] = float(p.get('lastFundingRate', 0.0)) * 100
+    except Exception:
+        pass
+
+    try:
+        oi = requests.get("https://fapi.binance.com/fapi/v1/openInterest?symbol=BTCUSDT", timeout=10).json()
+        oi_val = float(oi.get('openInterest', 0.0))
+        data['oi_btc_change'] = ((oi_val - old_oi) / old_oi * 100) if old_oi else 0.0
+        data['oi_btc'] = oi_val
+    except Exception:
+        pass
+
+    # 6) Composite signal
     btc_change = to_float(data.get('prices', {}).get('BTC', {}).get('change', 0.0), 0.0)
     fng_int = int(to_float(data.get('fng', 50), 50))
     dom_float = to_float(data.get('dom', 56.0), 56.0)
-    data['signal'] = compute_signal(fng_int, btc_change, dom_float)
+    funding = to_float(data.get('funding_btc', 0.0), 0.0)
+    data['signal'] = compute_signal(fng_int, btc_change, dom_float, funding)
 
     data['updated'] = time.strftime("%H:%M:%S")
     with open("data.json", "w") as f:
