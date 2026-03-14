@@ -1,182 +1,290 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-    <meta http-equiv="Pragma" content="no-cache" />
-    <meta http-equiv="Expires" content="0" />
-    <title>Mr X Pro Dashboard</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <title>Mr X Dashboard v2</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root { color-scheme: dark; }
+    body {
+      background:
+        radial-gradient(1200px 700px at 10% -10%, rgba(29,78,216,.25), transparent 50%),
+        radial-gradient(900px 600px at 100% 0%, rgba(6,182,212,.15), transparent 40%),
+        #020617;
+    }
+    .glass {
+      background: rgba(15, 23, 42, 0.7);
+      border: 1px solid rgba(148, 163, 184, 0.15);
+      backdrop-filter: blur(8px);
+    }
+    .pulse-dot { animation: pulse 1.8s infinite; }
+    @keyframes pulse {
+      0% { opacity: .35; transform: scale(.95); }
+      50% { opacity: 1; transform: scale(1); }
+      100% { opacity: .35; transform: scale(.95); }
+    }
+    .fade-in { animation: fadeIn .35s ease-out; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+  </style>
 </head>
-<body class="bg-black text-white p-4">
-    <div class="max-w-xl mx-auto">
-        <h1 class="text-xl font-black text-blue-500 mb-2 italic uppercase tracking-widest">Аналитика рынка</h1>
-        <p class="text-xs text-slate-400 mb-4">Пояснение: зелёный — рост, красный — падение. Δ = изменение за 24 часа.</p>
-
-        <div class="grid grid-cols-2 gap-3 mb-6">
-            <div class="bg-blue-900/20 p-6 rounded-2xl border border-blue-500/30 text-center col-span-2 mb-2">
-                <p class="text-[9px] text-slate-400 uppercase tracking-widest">Сигнал рынка</p>
-                <p id="signal" class="text-3xl font-black text-blue-400">LOADING...</p>
-                <p id="risk" class="text-sm font-bold mt-2 text-yellow-300">Риск: --</p>
-            </div>
-            <div class="bg-slate-900 p-4 rounded-xl border border-slate-800 text-center col-span-2">
-                <p class="text-[9px] text-slate-500 uppercase">План входа</p>
-                <p id="entryPlan" class="text-sm text-slate-200">Загрузка плана...</p>
-            </div>
-
-            <div class="bg-slate-900 p-4 rounded-xl border border-slate-800 text-center">
-                <p class="text-[9px] text-slate-500 uppercase">Страх и жадность (F&G)</p>
-                <p id="fng" class="text-lg font-bold">--</p>
-                <p id="fngChange" class="text-xs text-slate-400">--</p>
-            </div>
-
-            <div class="bg-slate-900 p-4 rounded-xl border border-slate-800 text-center">
-                <p class="text-[9px] text-slate-500 uppercase">Доминация BTC</p>
-                <p id="dom" class="text-lg font-bold">--</p>
-                <p id="domChange" class="text-xs text-slate-400">--</p>
-            </div>
-
-            <div class="bg-slate-900 p-4 rounded-xl border border-slate-800 text-center">
-                <p class="text-[9px] text-slate-500 uppercase">Индекс доллара (DXY)</p>
-                <p id="dxy" class="text-lg font-bold">--</p>
-                <p id="dxyChange" class="text-xs text-slate-400">--</p>
-            </div>
-
-            <div class="bg-slate-900 p-4 rounded-xl border border-slate-800 text-center">
-                <p class="text-[9px] text-slate-500 uppercase">Сезон альткоинов</p>
-                <p id="alt" class="text-lg font-bold">--</p>
-            </div>
+<body class="text-slate-100 p-4 md:p-6">
+  <div class="max-w-5xl mx-auto space-y-4">
+    <header class="glass rounded-2xl p-4 md:p-5">
+      <div class="flex items-start justify-between gap-4">
+        <div>
+          <h1 class="text-xl md:text-2xl font-black tracking-wide">Mr X • Market Dashboard v2</h1>
+          <p class="text-xs md:text-sm text-slate-400 mt-1">Зелёный = рост, красный = падение, Δ = 24ч. Ошибки API не ломают блоки — только N/A.</p>
         </div>
-
-        <div class="grid grid-cols-2 gap-3 mb-6">
-            <div class="bg-slate-900 p-4 rounded-xl border border-slate-800 text-center">
-                <p class="text-[9px] text-slate-500 uppercase">Фандинг BTC</p>
-                <p id="funding" class="text-lg font-bold">--</p>
-            </div>
-            <div class="bg-slate-900 p-4 rounded-xl border border-slate-800 text-center">
-                <p class="text-[9px] text-slate-500 uppercase">Открытый интерес BTC Δ</p>
-                <p id="oiChange" class="text-lg font-bold">--</p>
-            </div>
+        <div class="text-right text-xs text-slate-400 shrink-0">
+          <div class="flex items-center gap-2 justify-end">
+            <span class="w-2 h-2 rounded-full bg-emerald-400 pulse-dot"></span>
+            <span>Live</span>
+          </div>
+          <div class="mt-1">Обновлено: <span id="updated" class="text-slate-200">--</span></div>
+          <div class="mt-1">Heartbeat: <span id="heartbeat" class="text-slate-200">--</span></div>
         </div>
+      </div>
+    </header>
 
-        <div class="bg-slate-900 p-4 rounded-xl border border-slate-800 mb-4">
-            <p class="text-[10px] text-slate-500 uppercase mb-2">Мини-таймфреймы (Δ)</p>
-            <div class="grid grid-cols-5 gap-2 text-xs">
-                <div></div><div class="text-slate-400 text-center">30м</div><div class="text-slate-400 text-center">1ч</div><div class="text-slate-400 text-center">6ч</div><div class="text-slate-400 text-center">24ч</div>
-                <div class="text-slate-400">BTC</div><div id="btc30" class="text-center">--</div><div id="btc1h" class="text-center">--</div><div id="btc6h" class="text-center">--</div><div id="btc24" class="text-center">--</div>
-                <div class="text-slate-400">DOGE</div><div id="doge30" class="text-center">--</div><div id="doge1h" class="text-center">--</div><div id="doge6h" class="text-center">--</div><div id="doge24" class="text-center">--</div>
-            </div>
+    <section class="grid grid-cols-1 md:grid-cols-3 gap-3">
+      <article class="glass rounded-2xl p-4 md:col-span-2 fade-in">
+        <p class="text-[11px] uppercase tracking-wider text-slate-400">Сигнал рынка</p>
+        <div class="mt-1 flex items-end gap-3">
+          <h2 id="signal" class="text-2xl md:text-4xl font-black text-cyan-300">LOADING...</h2>
+          <span id="riskBadge" class="text-xs px-2 py-1 rounded-lg border border-slate-700 bg-slate-800/60">Риск: --</span>
         </div>
+        <p id="meaning" class="text-sm text-slate-300 mt-2">Смысл: --</p>
+      </article>
 
-        <div id="grid" class="space-y-3"></div>
-        <p class="text-center text-[10px] text-slate-600 mt-4">Обновлено: <span id="time">--</span></p>
-        <div id="meaning" class="mt-2 text-center text-xs text-blue-300">Смысл: --</div>
-        <div class="mt-4 text-[11px] text-slate-400 space-y-1">
-            <p>• F&G: настроение рынка (0–100), ниже = страх, выше = жадность.</p>
-            <p>• Доминация BTC: доля Биткоина в общем рынке крипты.</p>
-            <p>• DXY: сила доллара США (рост DXY часто давит на риск-активы).</p>
-            <p>• Фандинг/OI: перегрев плечевых позиций и активность деривативов.</p>
-        </div>
-    </div>
+      <article class="glass rounded-2xl p-4 fade-in">
+        <p class="text-[11px] uppercase tracking-wider text-slate-400">План входа</p>
+        <p id="entryPlan" class="text-sm mt-2 text-slate-200 leading-relaxed">Загрузка...</p>
+      </article>
+    </section>
 
-    <script>
-        function fmtDelta(v) {
-            const n = Number(v || 0);
-            const cls = n >= 0 ? 'text-green-500' : 'text-red-500';
-            return { text: `${n >= 0 ? '+' : ''}${n.toFixed(2)}%`, cls };
-        }
+    <section class="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <article class="glass rounded-xl p-3 fade-in">
+        <p class="text-[11px] uppercase tracking-wider text-slate-400">Fear & Greed</p>
+        <p id="fng" class="text-xl font-bold mt-1">--</p>
+        <p id="fngDelta" class="text-xs text-slate-400">--</p>
+      </article>
+      <article class="glass rounded-xl p-3 fade-in">
+        <p class="text-[11px] uppercase tracking-wider text-slate-400">BTC Dominance</p>
+        <p id="dom" class="text-xl font-bold mt-1">--</p>
+        <p id="domDelta" class="text-xs text-slate-400">--</p>
+      </article>
+      <article class="glass rounded-xl p-3 fade-in">
+        <p class="text-[11px] uppercase tracking-wider text-slate-400">DXY</p>
+        <p id="dxy" class="text-xl font-bold mt-1">--</p>
+        <p id="dxyDelta" class="text-xs text-slate-400">--</p>
+      </article>
+      <article class="glass rounded-xl p-3 fade-in">
+        <p class="text-[11px] uppercase tracking-wider text-slate-400">Alt Season</p>
+        <p id="alt" class="text-xl font-bold mt-1">--</p>
+        <p id="risk" class="text-xs text-slate-400">--</p>
+      </article>
+    </section>
 
-        async function update() {
-            try {
-                const res = await fetch("data.json?t=" + Date.now(), { cache: 'no-cache' });
-                const data = await res.json();
+    <section class="grid grid-cols-1 md:grid-cols-3 gap-3">
+      <article class="glass rounded-xl p-3 fade-in">
+        <p class="text-[11px] uppercase tracking-wider text-slate-400">Funding BTC</p>
+        <p id="funding" class="text-lg font-bold mt-1">--</p>
+      </article>
+      <article class="glass rounded-xl p-3 fade-in">
+        <p class="text-[11px] uppercase tracking-wider text-slate-400">OI BTC</p>
+        <p id="oi" class="text-lg font-bold mt-1">--</p>
+      </article>
+      <article class="glass rounded-xl p-3 fade-in">
+        <p class="text-[11px] uppercase tracking-wider text-slate-400">OI Δ</p>
+        <p id="oiDelta" class="text-lg font-bold mt-1">--</p>
+      </article>
+    </section>
 
-                document.getElementById('signal').innerText = data.signal || 'NEUTRAL';
-                const risk = data.risk_level || 'MEDIUM';
-                const riskCls = risk === 'HIGH' ? 'text-red-400' : (risk === 'LOW' ? 'text-green-400' : 'text-yellow-300');
-                const riskEl = document.getElementById('risk');
-                riskEl.textContent = `Риск: ${risk}`;
-                riskEl.className = `text-sm font-bold mt-2 ${riskCls}`;
+    <section class="glass rounded-2xl p-4 fade-in">
+      <p class="text-[11px] uppercase tracking-wider text-slate-400 mb-2">Мини-таймфреймы</p>
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm min-w-[420px]">
+          <thead>
+            <tr class="text-slate-400 border-b border-slate-700/60">
+              <th class="text-left py-2">Asset</th>
+              <th class="text-right py-2">30м</th>
+              <th class="text-right py-2">1ч</th>
+              <th class="text-right py-2">6ч</th>
+              <th class="text-right py-2">24ч</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="border-b border-slate-800/70"><td class="py-2">BTC</td><td id="btc30" class="text-right">--</td><td id="btc1h" class="text-right">--</td><td id="btc6h" class="text-right">--</td><td id="btc24" class="text-right">--</td></tr>
+            <tr><td class="py-2">DOGE</td><td id="doge30" class="text-right">--</td><td id="doge1h" class="text-right">--</td><td id="doge6h" class="text-right">--</td><td id="doge24" class="text-right">--</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
 
-                document.getElementById('fng').innerText = data.fng || 'N/A';
-                document.getElementById('dom').innerText = data.dom || 'N/A';
-                document.getElementById('dxy').innerText = data.dxy || 'N/A';
-                document.getElementById('alt').innerText = data.alt_season || 'N/A';
-                document.getElementById('time').innerText = data.updated || 'N/A';
+    <section id="prices" class="grid grid-cols-1 md:grid-cols-3 gap-3"></section>
+  </div>
 
-                const fngD = fmtDelta(data.fng_change);
-                const domD = fmtDelta(data.dom_change);
-                const dxyD = fmtDelta(data.dxy_change);
-                const oiD = fmtDelta(data.oi_btc_change);
+  <script>
+    const ids = {
+      signal: document.getElementById('signal'),
+      risk: document.getElementById('risk'),
+      riskBadge: document.getElementById('riskBadge'),
+      meaning: document.getElementById('meaning'),
+      entryPlan: document.getElementById('entryPlan'),
+      fng: document.getElementById('fng'),
+      fngDelta: document.getElementById('fngDelta'),
+      dom: document.getElementById('dom'),
+      domDelta: document.getElementById('domDelta'),
+      dxy: document.getElementById('dxy'),
+      dxyDelta: document.getElementById('dxyDelta'),
+      alt: document.getElementById('alt'),
+      funding: document.getElementById('funding'),
+      oi: document.getElementById('oi'),
+      oiDelta: document.getElementById('oiDelta'),
+      updated: document.getElementById('updated'),
+      heartbeat: document.getElementById('heartbeat')
+    };
 
-                const fngEl = document.getElementById('fngChange');
-                fngEl.textContent = fngD.text; fngEl.className = `text-xs ${fngD.cls}`;
-                const domEl = document.getElementById('domChange');
-                domEl.textContent = domD.text; domEl.className = `text-xs ${domD.cls}`;
-                const dxyEl = document.getElementById('dxyChange');
-                dxyEl.textContent = dxyD.text; dxyEl.className = `text-xs ${dxyD.cls}`;
+    function safeNum(v, fallback = null) {
+      const n = Number(v);
+      return Number.isFinite(n) ? n : fallback;
+    }
 
-                const funding = Number(data.funding_btc || 0);
-                const fundingCls = funding >= 0 ? 'text-green-500' : 'text-red-500';
-                document.getElementById('funding').textContent = `${funding >= 0 ? '+' : ''}${funding.toFixed(3)}%`;
-                document.getElementById('funding').className = `text-lg font-bold ${fundingCls}`;
+    function fmtDelta(v) {
+      const n = safeNum(v, null);
+      if (n === null) return {text: 'N/A', cls: 'text-slate-400'};
+      return {
+        text: `${n >= 0 ? '+' : ''}${n.toFixed(2)}%`,
+        cls: n >= 0 ? 'text-emerald-400' : 'text-rose-400'
+      };
+    }
 
-                const oiEl = document.getElementById('oiChange');
-                oiEl.textContent = oiD.text;
-                oiEl.className = `text-lg font-bold ${oiD.cls}`;
+    function setDelta(el, val) {
+      const d = fmtDelta(val);
+      el.textContent = d.text;
+      el.className = `text-xs ${d.cls}`;
+    }
 
-                function putDelta(id, v){
-                    const el = document.getElementById(id);
-                    const d = fmtDelta(v);
-                    el.textContent = d.text;
-                    el.className = `text-center ${d.cls}`;
-                }
+    function setDeltaCell(id, val) {
+      const el = document.getElementById(id);
+      const d = fmtDelta(val);
+      el.textContent = d.text;
+      el.className = `text-right ${d.cls}`;
+    }
 
-                putDelta('btc30', data.timeframes?.BTC?.['30m']);
-                putDelta('btc1h', data.timeframes?.BTC?.['1h']);
-                putDelta('btc6h', data.timeframes?.BTC?.['6h']);
-                putDelta('btc24', data.timeframes?.BTC?.['24h']);
-                putDelta('doge30', data.timeframes?.DOGE?.['30m']);
-                putDelta('doge1h', data.timeframes?.DOGE?.['1h']);
-                putDelta('doge6h', data.timeframes?.DOGE?.['6h']);
-                putDelta('doge24', data.timeframes?.DOGE?.['24h']);
+    function riskStyles(risk) {
+      if (risk === 'LOW') return {badge: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/40'};
+      if (risk === 'HIGH') return {badge: 'bg-rose-500/15 text-rose-300 border-rose-500/40'};
+      return {badge: 'bg-amber-500/15 text-amber-300 border-amber-500/40'};
+    }
 
-                const entryEl = document.getElementById('entryPlan');
-                entryEl.textContent = data.entry_plan || 'План: ожидание подтверждения.';
+    function fmtPrice(sym, value) {
+      const n = safeNum(value, null);
+      if (n === null) return 'N/A';
+      if (sym === 'DOGE') return n.toFixed(5); // required precision
+      return n.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    }
 
-                const meaning = document.getElementById('meaning');
-                const sig = (data.signal || 'NEUTRAL');
-                const riskTxt = (data.risk_level || 'MEDIUM');
-                meaning.textContent = `Смысл сейчас: ${sig} • риск ${riskTxt}. Рекомендуется вход только по плану/лимитам.`;
+    function priceCard(sym, price, ch) {
+      const d = fmtDelta(ch);
+      return `
+        <article class="glass rounded-xl p-4 fade-in">
+          <p class="text-[11px] uppercase tracking-wider text-slate-400">${sym}</p>
+          <p class="text-2xl font-black mt-1">$${price}</p>
+          <p class="text-sm mt-1 ${d.cls}">${d.text}</p>
+        </article>
+      `;
+    }
 
-                const grid = document.getElementById('grid');
-                grid.innerHTML = '';
-                for (const [sym, info] of Object.entries(data.prices || {})) {
-                    const changeN = Number(info.change || 0);
-                    const color = changeN >= 0 ? 'text-green-500' : 'text-red-500';
-                    const price = sym === 'DOGE'
-                        ? Number(info.price || 0).toFixed(5)
-                        : Number(info.price || 0).toLocaleString(undefined, { minimumFractionDigits: 2 });
-                    const change = changeN.toFixed(2);
-                    grid.innerHTML += `
-                        <div class="bg-slate-900 p-5 rounded-xl border border-slate-800 flex justify-between items-center">
-                            <div>
-                                <p class="text-slate-400 font-bold text-sm tracking-wider">${sym}</p>
-                                <p class="font-bold text-lg">$${price}</p>
-                            </div>
-                            <div class="text-right">
-                                <p class="font-bold ${color}">${change}%</p>
-                            </div>
-                        </div>
-                    `;
-                }
-            } catch (e) {
-                console.error(e);
-            }
-        }
+    async function refreshSnapshot() {
+      try {
+        const res = await fetch(`data.json?t=${Date.now()}`, {cache: 'no-cache'});
+        const data = await res.json();
 
-        update();
-        setInterval(update, 15000);
-    </script>
+        const signal = data.signal || 'N/A';
+        const risk = data.risk_level || 'N/A';
+        ids.signal.textContent = signal;
+        ids.risk.textContent = `Risk: ${risk}`;
+        ids.riskBadge.textContent = `Риск: ${risk}`;
+
+        const rs = riskStyles(risk);
+        ids.riskBadge.className = `text-xs px-2 py-1 rounded-lg border ${rs.badge}`;
+
+        ids.meaning.textContent = `Смысл: ${signal} • управление риском обязательно.`;
+        ids.entryPlan.textContent = data.entry_plan || 'N/A';
+
+        ids.fng.textContent = data.fng || 'N/A';
+        ids.dom.textContent = data.dom || 'N/A';
+        ids.dxy.textContent = data.dxy || 'N/A';
+        ids.alt.textContent = data.alt_season || 'N/A';
+        setDelta(ids.fngDelta, data.fng_change);
+        setDelta(ids.domDelta, data.dom_change);
+        setDelta(ids.dxyDelta, data.dxy_change);
+
+        const funding = safeNum(data.funding_btc, null);
+        ids.funding.textContent = funding === null ? 'N/A' : `${funding >= 0 ? '+' : ''}${funding.toFixed(4)}%`;
+        ids.funding.className = `text-lg font-bold mt-1 ${funding === null ? 'text-slate-400' : funding >= 0 ? 'text-emerald-400' : 'text-rose-400'}`;
+
+        const oi = safeNum(data.oi_btc, null);
+        ids.oi.textContent = oi === null ? 'N/A' : oi.toLocaleString(undefined, {maximumFractionDigits: 0});
+        ids.oi.className = 'text-lg font-bold mt-1 text-slate-200';
+        const oiDelta = fmtDelta(data.oi_btc_change);
+        ids.oiDelta.textContent = oiDelta.text;
+        ids.oiDelta.className = `text-lg font-bold mt-1 ${oiDelta.cls}`;
+
+        setDeltaCell('btc30', data.timeframes?.BTC?.['30m']);
+        setDeltaCell('btc1h', data.timeframes?.BTC?.['1h']);
+        setDeltaCell('btc6h', data.timeframes?.BTC?.['6h']);
+        setDeltaCell('btc24', data.timeframes?.BTC?.['24h']);
+        setDeltaCell('doge30', data.timeframes?.DOGE?.['30m']);
+        setDeltaCell('doge1h', data.timeframes?.DOGE?.['1h']);
+        setDeltaCell('doge6h', data.timeframes?.DOGE?.['6h']);
+        setDeltaCell('doge24', data.timeframes?.DOGE?.['24h']);
+
+        const priceData = data.prices || {};
+        const cards = ['BTC', 'ETH', 'DOGE'].map(sym => {
+          const info = priceData[sym] || {};
+          return priceCard(sym, fmtPrice(sym, info.price), info.change);
+        }).join('');
+        document.getElementById('prices').innerHTML = cards;
+
+        ids.updated.textContent = data.updated || 'N/A';
+        ids.heartbeat.textContent = new Date().toLocaleTimeString();
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    async function refreshLivePrices() {
+      try {
+        const r = await fetch('https://api.binance.com/api/v3/ticker/24hr', {cache: 'no-cache'});
+        const arr = await r.json();
+        const map = {BTC: 'BTCUSDT', ETH: 'ETHUSDT', DOGE: 'DOGEUSDT'};
+
+        const cards = document.querySelectorAll('#prices article');
+        cards.forEach(card => {
+          const sym = card.querySelector('p').textContent.trim();
+          const ticker = arr.find(x => x.symbol === map[sym]);
+          if (!ticker) return;
+
+          const price = fmtPrice(sym, ticker.lastPrice);
+          const d = fmtDelta(ticker.priceChangePercent);
+          card.querySelectorAll('p')[1].textContent = `$${price}`;
+          card.querySelectorAll('p')[2].textContent = d.text;
+          card.querySelectorAll('p')[2].className = `text-sm mt-1 ${d.cls}`;
+        });
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    refreshSnapshot();
+    setInterval(refreshSnapshot, 60000);
+    setInterval(refreshLivePrices, 10000);
+  </script>
 </body>
 </html>
