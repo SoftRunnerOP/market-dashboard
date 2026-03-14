@@ -5,171 +5,85 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Pixel Office HQ</title>
   <style>
-    :root { color-scheme: dark; }
-    body { margin:0; background:#0b0f14; color:#e5e7eb; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
-    .wrap { max-width: 1200px; margin: 0 auto; padding: 14px; }
-    .top { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
-    .chip { background:#101826; border:1px solid #263043; border-radius:10px; padding:6px 10px; font-size:12px; }
-    canvas { width:100%; height:auto; image-rendering: pixelated; image-rendering: crisp-edges; background:#0e141d; border:1px solid #273143; border-radius:14px; }
-    .legend { display:flex; gap:10px; flex-wrap:wrap; margin-top:10px; font-size:12px; color:#a6b0c2; }
+    body{margin:0;background:#090d14;color:#e5e7eb;font-family:ui-monospace,Menlo,monospace}
+    .wrap{max-width:1180px;margin:0 auto;padding:14px}
+    .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+    .chip{background:#101826;border:1px solid #2a3346;border-radius:10px;padding:6px 10px;font-size:12px}
+    canvas{width:100%;height:auto;image-rendering:pixelated;background:#0e1520;border:1px solid #263043;border-radius:14px}
+    .legend{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;font-size:12px;color:#a6b0c2}
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <div class="top">
-      <h2 style="margin:0">🏢 Pixel Office HQ v2</h2>
-      <div id="ts" class="chip">обновление…</div>
-    </div>
-    <canvas id="cv" width="1120" height="760"></canvas>
-    <div class="legend">
-      <span class="chip">🟢 working</span>
-      <span class="chip">🟡 idle</span>
-      <span class="chip">⚫ offline</span>
-      <span class="chip">мест: 20</span>
-    </div>
+<div class="wrap">
+  <div class="top">
+    <h2 style="margin:0">🏢 Pixel Office HQ v3</h2>
+    <div id="ts" class="chip">обновление…</div>
   </div>
+  <canvas id="cv" width="1120" height="760"></canvas>
+  <div class="legend">
+    <span class="chip">🟢 working</span><span class="chip">🟡 idle</span><span class="chip">⚫ offline</span><span class="chip">мест: 24</span>
+  </div>
+</div>
+<script>
+const cv=document.getElementById('cv'),ctx=cv.getContext('2d');
+const seats=[]; let id=0;
+for(let r=0;r<4;r++) for(let c=0;c<6;c++) seats.push({id:id++,x:55+c*175,y:140+r*145});
 
-  <script>
-    const cv = document.getElementById('cv');
-    const ctx = cv.getContext('2d');
+function rect(x,y,w,h,c){ctx.fillStyle=c;ctx.fillRect(x,y,w,h)}
+function txt(t,x,y,c='#d1d5db',s=12){ctx.fillStyle=c;ctx.font=`${s}px ui-monospace`;ctx.fillText(t,x,y)}
+function lamp(st){return st==='working'?'#22c55e':st==='idle'?'#f59e0b':'#64748b'}
 
-    // 20 desks, room-like arrangement
-    const layout = [];
-    let id = 0;
-    for (let r=0; r<4; r++) {
-      for (let c=0; c<5; c++) {
-        layout.push({ id:id++, x: 70 + c*205, y: 130 + r*145 });
-      }
-    }
+function drawFloor(){
+  for(let y=0;y<cv.height;y+=24){for(let x=0;x<cv.width;x+=24){rect(x,y,24,24,((x+y)/24)%2===0?'#111827':'#0f172a')}}
+  rect(0,0,cv.width,44,'#1f2937'); rect(0,cv.height-30,cv.width,30,'#1f2937'); rect(0,0,24,cv.height,'#1f2937'); rect(cv.width-24,0,24,cv.height,'#1f2937');
+  for(let i=0;i<5;i++){ const x=90+i*210; rect(x,10,150,20,'#1d4ed8'); rect(x+2,12,146,16,'#60a5fa'); }
+}
 
-    function colorByStatus(st){
-      if (st==='working') return '#22c55e';
-      if (st==='idle') return '#f59e0b';
-      return '#64748b';
-    }
-    function lamp(st){ return st==='working' ? '🟢' : st==='idle' ? '🟡' : '⚫'; }
+function drawDesk(slot,bot,t){
+  const x=slot.x,y=slot.y,st=bot?bot.status:'offline';
+  rect(x,y,120,64,'#1f2937'); rect(x+3,y+3,114,58,'#0f172a');
+  rect(x+38,y+8,44,24,'#334155'); rect(x+40,y+10,40,20,st==='working'?(t%20<10?'#2563eb':'#1d4ed8'):'#111827');
+  rect(x+45,y+36+(st==='working'&&t%6<3?1:0),35,7,'#4b5563');
+  rect(x+88,y+8,10,10,lamp(st));
 
-    function rect(x,y,w,h,c){ ctx.fillStyle=c; ctx.fillRect(x,y,w,h); }
-    function txt(t,x,y,c='#d1d5db',s=12){ ctx.fillStyle=c; ctx.font=`${s}px ui-monospace`; ctx.fillText(t,x,y); }
+  // person (bigger)
+  if(bot){
+    rect(x+52,y+44,10,10,'#f1c27d'); // head
+    rect(x+50,y+54,14,10,'#64748b'); // body
+    if(st==='working'){ rect(x+46,y+56,4,3,'#94a3b8'); rect(x+64,y+56,4,3,'#94a3b8'); }
+    txt(bot.name||'Bot',x,y+79,'#dbeafe',10);
+    txt(bot.role||'-',x,y+91,'#93c5fd',9);
+    if(st==='working') txt('печатает...',x+66,y+91,'#34d399',8);
+    if(st==='idle') txt('ожидание',x+70,y+91,'#fbbf24',8);
+  }else{
+    txt('Свободно',x,y+84,'#64748b',10);
+  }
+}
 
-    function drawFloor(){
-      for(let y=0;y<cv.height;y+=20){
-        for(let x=0;x<cv.width;x+=20){
-          rect(x,y,20,20, ((x/20+y/20)%2===0) ? '#111827' : '#0f172a');
-        }
-      }
-      // walls
-      rect(0,0,cv.width,34,'#1f2937');
-      rect(0,cv.height-28,cv.width,28,'#1f2937');
-      rect(0,0,22,cv.height,'#1f2937');
-      rect(cv.width-22,0,22,cv.height,'#1f2937');
+function drawDirector(d){
+  rect(370,52,380,70,'#0f172a'); rect(374,56,372,62,'#1e293b');
+  txt('👔 Директор: Main',392,82,'#bfdbfe',18);
+  const s=d.summary||{working:0,idle:0,offline:0};
+  txt(`🟢 ${s.working}   🟡 ${s.idle}   ⚫ ${s.offline}`,392,103,'#93c5fd',14);
+}
 
-      // windows
-      for(let i=0;i<4;i++){
-        const x=120+i*250;
-        rect(x,8,140,18,'#1e3a8a');
-        rect(x+2,10,136,14,'#60a5fa');
-      }
-      // plants
-      for(let i=0;i<6;i++){
-        const x=40+i*180;
-        rect(x,58,12,12,'#6b7280');
-        rect(x-2,46,16,12,'#22c55e');
-      }
-    }
+function draw(data){
+  ctx.clearRect(0,0,cv.width,cv.height);
+  drawFloor(); drawDirector(data);
+  const bots=(data.bots||[]).filter(b=>b.role!=='director');
+  const t=Math.floor(Date.now()/120);
+  seats.forEach((s,i)=>drawDesk(s,bots[i]||null,t));
+}
 
-    function drawPerson(x,y,status,tick){
-      // body
-      rect(x+56,y+50,14,10,'#334155');
-      // head
-      rect(x+58,y+42,10,10,'#f1c27d');
-      // arms typing animation
-      const t = status==='working' ? (tick%8<4?0:1) : 0;
-      rect(x+50,y+56+t,8,3,'#94a3b8');
-      rect(x+70,y+56-t,8,3,'#94a3b8');
-    }
+async function tick(){
+  try{
+    const r=await fetch('hq_data.json?t='+Date.now(),{cache:'no-cache'}); const d=await r.json();
+    document.getElementById('ts').textContent='обновлено: '+(d.generatedAt||'-');
+    draw(d);
+  }catch{ draw({bots:[],summary:{}}); }
+}
 
-    function drawDesk(slot, bot, tick){
-      const x=slot.x, y=slot.y;
-      // desk shadow
-      rect(x+2,y+72,152,6,'#0b0f14');
-      // desk top
-      rect(x,y,150,70,'#111827');
-      rect(x+2,y+2,146,66,'#1f2937');
-
-      // monitor
-      const st = bot ? bot.status : 'offline';
-      const glow = st==='working' ? (tick%20<10 ? '#2563eb' : '#1d4ed8') : st==='idle' ? '#374151' : '#111827';
-      rect(x+48,y+8,54,28,'#334155');
-      rect(x+50,y+10,50,24,glow);
-      rect(x+67,y+36,16,3,'#334155');
-
-      // keyboard + mouse
-      const kbShift = st==='working' && tick%6<3 ? 1 : 0;
-      rect(x+46,y+46+kbShift,56,8,'#4b5563');
-      rect(x+108,y+47,6,6,'#64748b');
-
-      // chair
-      rect(x+58,y+58,32,10,'#334155');
-      rect(x+66,y+68,16,6,'#334155');
-
-      // person
-      if(bot) drawPerson(x,y,st,tick);
-
-      // status lamp
-      const lc = colorByStatus(st);
-      rect(x+132,y+8,10,10,lc);
-
-      // labels
-      if(bot){
-        txt(`${bot.name}`, x, y+86, '#dbeafe', 11);
-        txt(`${bot.role||'-'}`, x, y+98, '#93c5fd', 10);
-      } else {
-        txt('Свободно', x, y+86, '#64748b', 11);
-      }
-    }
-
-    function drawHQPanel(bots){
-      rect(360,40,400,60,'#0f172a');
-      rect(364,44,392,52,'#1e293b');
-      txt('👔 Директор: Main', 388, 67, '#bfdbfe', 16);
-      const w = bots.filter(b=>b.status==='working').length;
-      const i = bots.filter(b=>b.status==='idle').length;
-      const o = bots.filter(b=>b.status==='offline').length;
-      txt(`🟢 ${w}   🟡 ${i}   ⚫ ${o}`, 388, 86, '#93c5fd', 13);
-    }
-
-    function drawScene(data){
-      ctx.clearRect(0,0,cv.width,cv.height);
-      drawFloor();
-
-      const bots = data.bots || [];
-      drawHQPanel(bots);
-
-      const workers = bots.filter(b=>b.role!=='director');
-      const tick = Math.floor(Date.now()/120);
-      for(let i=0;i<layout.length;i++){
-        drawDesk(layout[i], workers[i] || null, tick);
-      }
-    }
-
-    async function fetchData(){
-      const r = await fetch('hq_data.json?t='+Date.now(), {cache:'no-cache'});
-      return await r.json();
-    }
-
-    async function tick(){
-      try{
-        const d = await fetchData();
-        document.getElementById('ts').textContent = 'обновлено: ' + (d.generatedAt || '-');
-        drawScene(d);
-      }catch(e){
-        drawScene({bots:[]});
-      }
-    }
-
-    tick();
-    setInterval(tick, 3000);
-  </script>
+tick(); setInterval(tick,3000);
+</script>
 </body>
 </html>
