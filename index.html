@@ -19,6 +19,10 @@
                 <p id="signal" class="text-3xl font-black text-blue-400">LOADING...</p>
                 <p id="risk" class="text-sm font-bold mt-2 text-yellow-300">Риск: --</p>
             </div>
+            <div class="bg-slate-900 p-4 rounded-xl border border-slate-800 text-center col-span-2">
+                <p class="text-[9px] text-slate-500 uppercase">План входа</p>
+                <p id="entryPlan" class="text-sm text-slate-200">Загрузка плана...</p>
+            </div>
 
             <div class="bg-slate-900 p-4 rounded-xl border border-slate-800 text-center">
                 <p class="text-[9px] text-slate-500 uppercase">Страх и жадность (F&G)</p>
@@ -136,6 +140,9 @@
                 putDelta('doge1h', data.timeframes?.DOGE?.['1h']);
                 putDelta('doge6h', data.timeframes?.DOGE?.['6h']);
                 putDelta('doge24', data.timeframes?.DOGE?.['24h']);
+
+                const entryEl = document.getElementById('entryPlan');
+                entryEl.textContent = data.entry_plan || 'План: ожидание подтверждения.';
 
                 const meaning = document.getElementById('meaning');
                 const sig = (data.signal || 'NEUTRAL');

@@ -101,6 +101,7 @@ def fetch_data():
         "dxy_change": 0.0,
         "alt_season": "N/A",
         "signal": "NEUTRAL",
+        "entry_plan": "Ожидание подтверждения",
         "risk_level": "MEDIUM",
         "funding_btc": 0.0,
         "oi_btc": 0.0,
@@ -218,6 +219,18 @@ def fetch_data():
 
     data['signal'] = compute_signal(fng_int, btc_change, dom_float, funding)
     data['risk_level'] = compute_risk_level(fng_int, btc_change, funding, dxy_change)
+
+    # Entry plan (simple rule-based guidance)
+    doge_price = to_float(data.get('prices', {}).get('DOGE', {}).get('price', 0.0), 0.0)
+    if data['signal'] in ["STRONG BUY", "BUY ZONE"] and data['risk_level'] != "HIGH":
+        data['entry_plan'] = (
+            f"План входа: лесенка 30/70. 30% сейчас (~${doge_price:.5f}), "
+            f"70% в зоне поддержки 0.09100-0.09250. Стоп: 0.08200."
+        )
+    elif data['risk_level'] == "HIGH":
+        data['entry_plan'] = "План входа: ВНЕ РЫНКА (высокий риск). Ждать снижения риска/подтверждения."
+    else:
+        data['entry_plan'] = "План входа: Ожидание подтверждения (нейтральный режим)."
 
     data['updated'] = time.strftime("%H:%M:%S")
     with open("data.json", "w") as f:
