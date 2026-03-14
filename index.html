@@ -9,34 +9,20 @@
 <body class="bg-slate-950 text-white p-6">
     <div class="max-w-4xl mx-auto">
         <h1 class="text-3xl font-bold mb-8 text-blue-400">Market Intelligence</h1>
-        <div id="status" class="text-slate-500 mb-4 font-mono text-sm">Syncing...</div>
+        <div id="status" class="text-slate-500 mb-4 font-mono text-sm">Initializing...</div>
         <div id="grid" class="grid grid-cols-1 md:grid-cols-3 gap-6"></div>
     </div>
     <script>
-        async function fetchProxied(url) {
-            const res = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`);
-            const data = await res.json();
-            return JSON.parse(data.contents);
-        }
-
         async function update() {
             try {
-                document.getElementById('status').innerText = 'Updating...';
-                // Fetch Data
-                const [data, fngData] = await Promise.all([
-                    fetchProxied("https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,dogecoin&vs_currencies=usd&include_24hr_change=true"),
-                    fetchProxied("https://api.alternative.me/fng/")
-                ]);
+                document.getElementById('status').innerText = 'Fetching data...';
+                // Direct fetch without proxy
+                const res = await fetch("https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,dogecoin&vs_currencies=usd&include_24hr_change=true");
+                const data = await res.json();
                 
                 const grid = document.getElementById('grid');
                 grid.innerHTML = '';
-                // Add Metrics Card
-                grid.innerHTML += `<div class="bg-slate-900 p-6 rounded-xl border border-blue-500">
-                    <h2 class="text-xs uppercase tracking-widest text-slate-400">Fear & Greed</h2>
-                    <p class="text-3xl font-bold">${fngData.data[0].value}</p>
-                    <p class="text-sm text-blue-400">${fngData.data[0].value_classification}</p>
-                </div>`;
-
+                
                 for (const [id, info] of Object.entries(data)) {
                     const change = info.usd_24h_change || 0;
                     const color = change >= 0 ? 'text-green-500' : 'text-red-500';
@@ -51,7 +37,7 @@
                 }
                 document.getElementById('status').innerText = 'Live';
             } catch (e) {
-                document.getElementById('status').innerText = 'Sync Error: ' + e.message;
+                document.getElementById('status').innerText = 'Connection Error: ' + e.message;
             }
         }
         update();
