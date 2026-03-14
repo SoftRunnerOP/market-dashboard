@@ -55,8 +55,18 @@
             </div>
         </div>
 
+        <div class="bg-slate-900 p-4 rounded-xl border border-slate-800 mb-4">
+            <p class="text-[10px] text-slate-500 uppercase mb-2">Мини-таймфреймы (Δ)</p>
+            <div class="grid grid-cols-5 gap-2 text-xs">
+                <div></div><div class="text-slate-400 text-center">30м</div><div class="text-slate-400 text-center">1ч</div><div class="text-slate-400 text-center">6ч</div><div class="text-slate-400 text-center">24ч</div>
+                <div class="text-slate-400">BTC</div><div id="btc30" class="text-center">--</div><div id="btc1h" class="text-center">--</div><div id="btc6h" class="text-center">--</div><div id="btc24" class="text-center">--</div>
+                <div class="text-slate-400">DOGE</div><div id="doge30" class="text-center">--</div><div id="doge1h" class="text-center">--</div><div id="doge6h" class="text-center">--</div><div id="doge24" class="text-center">--</div>
+            </div>
+        </div>
+
         <div id="grid" class="space-y-3"></div>
         <p class="text-center text-[10px] text-slate-600 mt-4">Обновлено: <span id="time">--</span></p>
+        <div id="meaning" class="mt-2 text-center text-xs text-blue-300">Смысл: --</div>
         <div class="mt-4 text-[11px] text-slate-400 space-y-1">
             <p>• F&G: настроение рынка (0–100), ниже = страх, выше = жадность.</p>
             <p>• Доминация BTC: доля Биткоина в общем рынке крипты.</p>
@@ -110,6 +120,27 @@
                 const oiEl = document.getElementById('oiChange');
                 oiEl.textContent = oiD.text;
                 oiEl.className = `text-lg font-bold ${oiD.cls}`;
+
+                function putDelta(id, v){
+                    const el = document.getElementById(id);
+                    const d = fmtDelta(v);
+                    el.textContent = d.text;
+                    el.className = `text-center ${d.cls}`;
+                }
+
+                putDelta('btc30', data.timeframes?.BTC?.['30m']);
+                putDelta('btc1h', data.timeframes?.BTC?.['1h']);
+                putDelta('btc6h', data.timeframes?.BTC?.['6h']);
+                putDelta('btc24', data.timeframes?.BTC?.['24h']);
+                putDelta('doge30', data.timeframes?.DOGE?.['30m']);
+                putDelta('doge1h', data.timeframes?.DOGE?.['1h']);
+                putDelta('doge6h', data.timeframes?.DOGE?.['6h']);
+                putDelta('doge24', data.timeframes?.DOGE?.['24h']);
+
+                const meaning = document.getElementById('meaning');
+                const sig = (data.signal || 'NEUTRAL');
+                const riskTxt = (data.risk_level || 'MEDIUM');
+                meaning.textContent = `Смысл сейчас: ${sig} • риск ${riskTxt}. Рекомендуется вход только по плану/лимитам.`;
 
                 const grid = document.getElementById('grid');
                 grid.innerHTML = '';

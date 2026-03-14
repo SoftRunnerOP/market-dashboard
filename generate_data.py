@@ -77,6 +77,20 @@ def compute_risk_level(fng_value: int, btc_change: float, funding_btc: float, dx
     return "LOW"
 
 
+def get_interval_change(symbol: str, interval: str) -> float:
+    """Return % change of last CLOSED candle for interval."""
+    try:
+        url = f"https://api.binance.com/api/v3/klines?symbol={symbol}&interval={interval}&limit=2"
+        arr = requests.get(url, timeout=10).json()
+        # Use previous closed candle (index -2) for stable value
+        candle = arr[-2] if len(arr) >= 2 else arr[-1]
+        open_p = float(candle[1])
+        close_p = float(candle[4])
+        return ((close_p - open_p) / open_p) * 100 if open_p else 0.0
+    except Exception:
+        return 0.0
+
+
 def fetch_data():
     data = {
         "fng": "N/A",
@@ -92,6 +106,10 @@ def fetch_data():
         "oi_btc": 0.0,
         "oi_btc_change": 0.0,
         "btc_range_24h": 0.0,
+        "timeframes": {
+            "BTC": {"30m": 0.0, "1h": 0.0, "6h": 0.0, "24h": 0.0},
+            "DOGE": {"30m": 0.0, "1h": 0.0, "6h": 0.0, "24h": 0.0}
+        },
         "prices": {},
         "updated": time.strftime("%H:%M:%S")
     }
@@ -107,6 +125,7 @@ def fetch_data():
     old_dom = to_float(data.get("dom", 56.0), 56.0)
     old_oi = to_float(data.get("oi_btc", 0.0), 0.0)
 
+    # 1) Binance spot prices
     try:
         r = requests.get("https://api.binance.com/api/v3/ticker/24hr", timeout=10)
         tickers = r.json() if r.ok else []
@@ -126,6 +145,7 @@ def fetch_data():
     except Exception:
         pass
 
+    # 2) CoinGecko global (dominance)
     try:
         headers = {'x-cg-demo-api-key': API_KEY}
         g = requests.get("https://api.coingecko.com/api/v3/global", headers=headers, timeout=10).json()
@@ -136,6 +156,7 @@ def fetch_data():
     except Exception:
         pass
 
+    # 3) Fear & Greed + delta
     try:
         f = requests.get("https://api.alternative.me/fng/?limit=2", timeout=10).json()
         now_v = float(f['data'][0]['value'])
@@ -145,6 +166,7 @@ def fetch_data():
     except Exception:
         pass
 
+    # 4) DXY + daily delta
     try:
         dxy_csv = requests.get("https://stooq.com/q/l/?s=dx.f&f=sd2t2ohlcv&h&e=csv", timeout=10).text.strip().splitlines()
         if len(dxy_csv) >= 2:
@@ -156,6 +178,7 @@ def fetch_data():
     except Exception:
         pass
 
+    # 5) Funding + OI from Binance futures
     try:
         p = requests.get("https://fapi.binance.com/fapi/v1/premiumIndex?symbol=BTCUSDT", timeout=10).json()
         data['funding_btc'] = float(p.get('lastFundingRate', 0.0)) * 100
@@ -170,6 +193,23 @@ def fetch_data():
     except Exception:
         pass
 
+    # 6) Mini timeframes
+    data['timeframes'] = {
+        "BTC": {
+            "30m": get_interval_change("BTCUSDT", "30m"),
+            "1h": get_interval_change("BTCUSDT", "1h"),
+            "6h": get_interval_change("BTCUSDT", "6h"),
+            "24h": to_float(data.get('prices', {}).get('BTC', {}).get('change', 0.0), 0.0),
+        },
+        "DOGE": {
+            "30m": get_interval_change("DOGEUSDT", "30m"),
+            "1h": get_interval_change("DOGEUSDT", "1h"),
+            "6h": get_interval_change("DOGEUSDT", "6h"),
+            "24h": to_float(data.get('prices', {}).get('DOGE', {}).get('change', 0.0), 0.0),
+        },
+    }
+
+    # 7) Composite signal + risk
     btc_change = to_float(data.get('prices', {}).get('BTC', {}).get('change', 0.0), 0.0)
     fng_int = int(to_float(data.get('fng', 50), 50))
     dom_float = to_float(data.get('dom', 56.0), 56.0)
