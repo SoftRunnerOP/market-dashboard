@@ -6,19 +6,17 @@ import os
 API_KEY = "CG-E1S3As15sNEzr2wPymEeUkLm"
 
 
-def parse_percent(value, default=0.0):
+def to_float(val, default=0.0):
     try:
-        if isinstance(value, str) and value.endswith('%'):
-            return float(value[:-1])
-        return float(value)
+        if isinstance(val, str) and val.endswith('%'):
+            return float(val[:-1])
+        return float(val)
     except Exception:
         return default
 
 
 def compute_signal(fng_value: int, btc_change: float, dom_value: float) -> str:
-    # Simple, transparent scoring
     score = 50
-    # Fear/greed (contrarian)
     if fng_value <= 20:
         score += 20
     elif fng_value <= 35:
@@ -28,13 +26,11 @@ def compute_signal(fng_value: int, btc_change: float, dom_value: float) -> str:
     elif fng_value >= 65:
         score -= 10
 
-    # BTC momentum
     if btc_change >= 2:
         score += 10
     elif btc_change <= -2:
         score -= 10
 
-    # Dominance pressure on alts
     if dom_value >= 58:
         score -= 10
     elif dom_value <= 45:
@@ -52,11 +48,13 @@ def compute_signal(fng_value: int, btc_change: float, dom_value: float) -> str:
 
 
 def fetch_data():
-    # Preserve previous values on partial API failures
     data = {
         "fng": "N/A",
+        "fng_change": 0.0,
         "dom": "N/A",
-        "dxy": "104.5",
+        "dom_change": 0.0,
+        "dxy": "N/A",
+        "dxy_change": 0.0,
         "alt_season": "N/A",
         "signal": "NEUTRAL",
         "prices": {},
@@ -71,7 +69,9 @@ def fetch_data():
         except Exception:
             pass
 
-    # 1) Binance prices (reliable)
+    old_dom = to_float(data.get("dom", 56.0), 56.0)
+
+    # 1) Binance prices
     try:
         r = requests.get("https://api.binance.com/api/v3/ticker/24hr", timeout=10)
         tickers = r.json() if r.ok else []
@@ -86,26 +86,44 @@ def fetch_data():
     except Exception:
         pass
 
-    # 2) CoinGecko global + F&G
+    # 2) CoinGecko global (dominance)
     try:
         headers = {'x-cg-demo-api-key': API_KEY}
         g = requests.get("https://api.coingecko.com/api/v3/global", headers=headers, timeout=10).json()
         dom_val = float(g['data']['market_cap_percentage']['btc'])
         data['dom'] = f"{dom_val:.1f}%"
+        data['dom_change'] = dom_val - old_dom
         data['alt_season'] = "HIGH" if dom_val < 40 else "LOW"
     except Exception:
         pass
 
+    # 3) F&G index + 24h delta (via last two points)
     try:
-        f = requests.get("https://api.alternative.me/fng/", timeout=10).json()
-        data['fng'] = str(f['data'][0]['value'])
+        f = requests.get("https://api.alternative.me/fng/?limit=2", timeout=10).json()
+        now_v = float(f['data'][0]['value'])
+        prev_v = float(f['data'][1]['value']) if len(f['data']) > 1 else now_v
+        data['fng'] = str(int(now_v))
+        data['fng_change'] = now_v - prev_v
     except Exception:
         pass
 
-    # 3) Compute signal from available values
-    btc_change = parse_percent(data.get('prices', {}).get('BTC', {}).get('change', 0.0), 0.0)
-    fng_int = int(parse_percent(data.get('fng', 50), 50))
-    dom_float = parse_percent(data.get('dom', 56.0), 56.0)
+    # 4) DXY + daily delta from open/close (stooq)
+    try:
+        # Example: Symbol,Date,Time,Open,High,Low,Close,Volume
+        dxy_csv = requests.get("https://stooq.com/q/l/?s=dx.f&f=sd2t2ohlcv&h&e=csv", timeout=10).text.strip().splitlines()
+        if len(dxy_csv) >= 2:
+            row = dxy_csv[1].split(',')
+            open_p = float(row[3])
+            close_p = float(row[6])
+            data['dxy'] = f"{close_p:.3f}"
+            data['dxy_change'] = ((close_p - open_p) / open_p) * 100 if open_p else 0.0
+    except Exception:
+        pass
+
+    # 5) Composite signal
+    btc_change = to_float(data.get('prices', {}).get('BTC', {}).get('change', 0.0), 0.0)
+    fng_int = int(to_float(data.get('fng', 50), 50))
+    dom_float = to_float(data.get('dom', 56.0), 56.0)
     data['signal'] = compute_signal(fng_int, btc_change, dom_float)
 
     data['updated'] = time.strftime("%H:%M:%S")

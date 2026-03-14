@@ -17,19 +17,45 @@
                 <p class="text-[9px] text-slate-400 uppercase tracking-widest">Market Signal</p>
                 <p id="signal" class="text-3xl font-black text-blue-400">LOADING...</p>
             </div>
-            <div class="bg-slate-900 p-4 rounded-xl border border-slate-800 text-center"><p class="text-[9px] text-slate-500 uppercase">F&G</p><p id="fng" class="text-lg font-bold">--</p></div>
-            <div class="bg-slate-900 p-4 rounded-xl border border-slate-800 text-center"><p class="text-[9px] text-slate-500 uppercase">DOM</p><p id="dom" class="text-lg font-bold">--</p></div>
-            <div class="bg-slate-900 p-4 rounded-xl border border-slate-800 text-center"><p class="text-[9px] text-slate-500 uppercase">DXY</p><p id="dxy" class="text-lg font-bold">--</p></div>
-            <div class="bg-slate-900 p-4 rounded-xl border border-slate-800 text-center"><p class="text-[9px] text-slate-500 uppercase">ALT SEASON</p><p id="alt" class="text-lg font-bold">--</p></div>
+
+            <div class="bg-slate-900 p-4 rounded-xl border border-slate-800 text-center">
+                <p class="text-[9px] text-slate-500 uppercase">F&G</p>
+                <p id="fng" class="text-lg font-bold">--</p>
+                <p id="fngChange" class="text-xs text-slate-400">--</p>
+            </div>
+
+            <div class="bg-slate-900 p-4 rounded-xl border border-slate-800 text-center">
+                <p class="text-[9px] text-slate-500 uppercase">DOM</p>
+                <p id="dom" class="text-lg font-bold">--</p>
+                <p id="domChange" class="text-xs text-slate-400">--</p>
+            </div>
+
+            <div class="bg-slate-900 p-4 rounded-xl border border-slate-800 text-center">
+                <p class="text-[9px] text-slate-500 uppercase">DXY</p>
+                <p id="dxy" class="text-lg font-bold">--</p>
+                <p id="dxyChange" class="text-xs text-slate-400">--</p>
+            </div>
+
+            <div class="bg-slate-900 p-4 rounded-xl border border-slate-800 text-center">
+                <p class="text-[9px] text-slate-500 uppercase">ALT SEASON</p>
+                <p id="alt" class="text-lg font-bold">--</p>
+            </div>
         </div>
 
         <div id="grid" class="space-y-3"></div>
         <p class="text-center text-[10px] text-slate-600 mt-4">Last update: <span id="time">--</span></p>
     </div>
+
     <script>
+        function fmtDelta(v) {
+            const n = Number(v || 0);
+            const cls = n >= 0 ? 'text-green-500' : 'text-red-500';
+            return { text: `${n >= 0 ? '+' : ''}${n.toFixed(2)}%`, cls };
+        }
+
         async function update() {
             try {
-                const res = await fetch("data.json?t=" + new Date().getTime(), { cache: 'no-cache' });
+                const res = await fetch("data.json?t=" + Date.now(), { cache: 'no-cache' });
                 const data = await res.json();
 
                 document.getElementById('signal').innerText = data.signal || 'NEUTRAL';
@@ -39,14 +65,26 @@
                 document.getElementById('alt').innerText = data.alt_season || 'N/A';
                 document.getElementById('time').innerText = data.updated || 'N/A';
 
+                const fngD = fmtDelta(data.fng_change);
+                const domD = fmtDelta(data.dom_change);
+                const dxyD = fmtDelta(data.dxy_change);
+
+                const fngEl = document.getElementById('fngChange');
+                fngEl.textContent = fngD.text; fngEl.className = `text-xs ${fngD.cls}`;
+                const domEl = document.getElementById('domChange');
+                domEl.textContent = domD.text; domEl.className = `text-xs ${domD.cls}`;
+                const dxyEl = document.getElementById('dxyChange');
+                dxyEl.textContent = dxyD.text; dxyEl.className = `text-xs ${dxyD.cls}`;
+
                 const grid = document.getElementById('grid');
                 grid.innerHTML = '';
                 for (const [sym, info] of Object.entries(data.prices || {})) {
-                    const color = (info.change ?? 0) >= 0 ? 'text-green-500' : 'text-red-500';
+                    const changeN = Number(info.change || 0);
+                    const color = changeN >= 0 ? 'text-green-500' : 'text-red-500';
                     const price = sym === 'DOGE'
                         ? Number(info.price || 0).toFixed(5)
                         : Number(info.price || 0).toLocaleString(undefined, { minimumFractionDigits: 2 });
-                    const change = Number(info.change || 0).toFixed(2);
+                    const change = changeN.toFixed(2);
                     grid.innerHTML += `
                         <div class="bg-slate-900 p-5 rounded-xl border border-slate-800 flex justify-between items-center">
                             <div>
@@ -63,6 +101,7 @@
                 console.error(e);
             }
         }
+
         update();
         setInterval(update, 15000);
     </script>
