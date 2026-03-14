@@ -3,74 +3,56 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mr X Pro Dashboard</title>
+    <title>Mr X Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-slate-950 text-white p-6">
-    <div class="max-w-5xl mx-auto">
-        <div class="flex justify-between items-center mb-8">
-            <h1 class="text-3xl font-bold text-blue-400">Market Intelligence</h1>
-            <div id="status" class="text-slate-500 font-mono">Updating...</div>
-        </div>
-        
-        <!-- Gauges Panel -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-            <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800">
-                <div class="flex justify-between mb-2 text-slate-400"><span>Fear & Greed Index</span><span id="fng-val">--</span></div>
-                <div class="w-full bg-slate-800 rounded-full h-4 overflow-hidden">
-                    <div id="fng-bar" class="bg-yellow-500 h-full w-0 transition-all duration-500"></div>
-                </div>
-            </div>
-            <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800">
-                <div class="flex justify-between mb-2 text-slate-400"><span>BTC Dominance</span><span id="dom-val">--</span></div>
-                <div class="w-full bg-slate-800 rounded-full h-4 overflow-hidden">
-                    <div id="dom-bar" class="bg-blue-500 h-full w-0 transition-all duration-500"></div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Assets Grid -->
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-3xl font-bold mb-8 text-blue-400">Market Intelligence</h1>
+        <div id="status" class="text-slate-500 mb-4 font-mono text-sm">Syncing...</div>
         <div id="grid" class="grid grid-cols-1 md:grid-cols-3 gap-6"></div>
     </div>
-
     <script>
+        async function fetchProxied(url) {
+            const res = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`);
+            const data = await res.json();
+            return JSON.parse(data.contents);
+        }
+
         async function update() {
             try {
-                // Fetch Prices & Global Data
-                const [priceRes, globalRes] = await Promise.all([
-                    fetch("https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,dogecoin&vs_currencies=usd&include_24hr_change=true"),
-                    fetch("https://api.coingecko.com/api/v3/global")
+                document.getElementById('status').innerText = 'Updating...';
+                // Fetch Data
+                const [data, fngData] = await Promise.all([
+                    fetchProxied("https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,dogecoin&vs_currencies=usd&include_24hr_change=true"),
+                    fetchProxied("https://api.alternative.me/fng/")
                 ]);
-                const data = await priceRes.json();
-                const global = (await globalRes.json()).data;
                 
-                // Update Gauges
-                const btcDom = global.market_cap_percentage.bitcoin.toFixed(1);
-                document.getElementById('dom-val').innerText = btcDom + '%';
-                document.getElementById('dom-bar').style.width = btcDom + '%';
-
-                const fngRes = await fetch("https://api.alternative.me/fng/");
-                const fngData = await fngRes.json();
-                const fng = fngData.data[0].value;
-                document.getElementById('fng-val').innerText = fng;
-                document.getElementById('fng-bar').style.width = fng + '%';
-
-                // Update Grid
                 const grid = document.getElementById('grid');
                 grid.innerHTML = '';
+                // Add Metrics Card
+                grid.innerHTML += `<div class="bg-slate-900 p-6 rounded-xl border border-blue-500">
+                    <h2 class="text-xs uppercase tracking-widest text-slate-400">Fear & Greed</h2>
+                    <p class="text-3xl font-bold">${fngData.data[0].value}</p>
+                    <p class="text-sm text-blue-400">${fngData.data[0].value_classification}</p>
+                </div>`;
+
                 for (const [id, info] of Object.entries(data)) {
-                    const color = info.usd_24h_change >= 0 ? 'text-green-500' : 'text-red-500';
+                    const change = info.usd_24h_change || 0;
+                    const color = change >= 0 ? 'text-green-500' : 'text-red-500';
                     const price = id === 'dogecoin' ? info.usd.toFixed(4) : info.usd.toLocaleString();
                     grid.innerHTML += `
-                        <div class="bg-slate-900 p-6 rounded-xl border border-slate-700 hover:border-blue-500 transition-all">
-                            <h2 class="text-xs uppercase tracking-widest text-slate-400 mb-2">${id}</h2>
-                            <p class="text-3xl font-bold">$${price}</p>
-                            <p class="text-sm font-bold ${color}">${info.usd_24h_change.toFixed(2)}%</p>
+                        <div class="bg-slate-900 p-6 rounded-xl border border-slate-700">
+                            <h2 class="text-xs uppercase tracking-widest text-slate-400">${id}</h2>
+                            <p class="text-3xl font-bold my-2">$${price}</p>
+                            <p class="text-md font-bold ${color}">${change.toFixed(2)}%</p>
                         </div>
                     `;
                 }
                 document.getElementById('status').innerText = 'Live';
-            } catch (e) { document.getElementById('status').innerText = 'Sync Error'; }
+            } catch (e) {
+                document.getElementById('status').innerText = 'Sync Error: ' + e.message;
+            }
         }
         update();
         setInterval(update, 30000);
