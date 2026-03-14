@@ -3,39 +3,77 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mr X Market Dash</title>
+    <title>Mr X Pro Intelligence</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-black text-white p-4">
-    <div class="max-w-xl mx-auto">
-        <h1 class="text-xl font-bold mb-6 text-blue-500">Live Prices</h1>
-        <div id="grid" class="grid grid-cols-1 gap-4"></div>
+<body class="bg-black text-white p-4 font-sans">
+    <div class="max-w-4xl mx-auto">
+        <div class="flex justify-between items-end mb-6">
+            <h1 class="text-2xl font-bold text-blue-500">Market Intelligence</h1>
+            <div id="status" class="text-[10px] text-slate-500 font-mono">LIVE</div>
+        </div>
+        
+        <!-- Metrics Grid -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+            <div class="bg-slate-900 p-4 rounded-xl border border-slate-800"><p class="text-[10px] text-slate-500 uppercase">F&G Index</p><p id="fng" class="text-xl font-bold">--</p></div>
+            <div class="bg-slate-900 p-4 rounded-xl border border-slate-800"><p class="text-[10px] text-slate-500 uppercase">BTC Dom</p><p id="dom" class="text-xl font-bold">--%</p></div>
+            <div class="bg-slate-900 p-4 rounded-xl border border-slate-800"><p class="text-[10px] text-slate-500 uppercase">Alt Season</p><p id="alt" class="text-xl font-bold">--</p></div>
+            <div class="bg-slate-900 p-4 rounded-xl border border-slate-800"><p class="text-[10px] text-slate-500 uppercase">DXY (Est)</p><p id="dxy" class="text-xl font-bold">104.5</p></div>
+        </div>
+
+        <!-- Prices -->
+        <div id="grid" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
     </div>
+
     <script>
         async function update() {
-            const symbols = ["BTCUSDT", "ETHUSDT", "DOGEUSDT"];
-            const grid = document.getElementById('grid');
-            grid.innerHTML = '<p class="text-slate-500">Loading...</p>';
-            
             try {
-                let html = '';
-                for (const sym of symbols) {
-                    const res = await fetch(`https://api.binance.com/api/v3/ticker/price?symbol=${sym}`);
-                    const data = await res.json();
-                    html += `
-                        <div class="bg-slate-900 p-5 rounded-xl border border-slate-800 flex justify-between">
-                            <span class="text-slate-400 font-bold">${sym.replace('USDT', '')}</span>
-                            <span class="font-bold text-lg">$${parseFloat(data.price).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 4})}</span>
-                        </div>
-                    `;
+                // Fetch Prices & Metrics
+                const [priceRes, globalRes, fngRes] = await Promise.allSettled([
+                    fetch("https://api.binance.com/api/v3/ticker/24hr"),
+                    fetch("https://api.coingecko.com/api/v3/global"),
+                    fetch("https://api.alternative.me/fng/")
+                ]);
+
+                // Update Metrics
+                if(globalRes.status === 'fulfilled') {
+                    const global = (await globalRes.value.json()).data;
+                    document.getElementById('dom').innerText = global.market_cap_percentage.bitcoin.toFixed(1) + '%';
+                    const dom = global.market_cap_percentage.bitcoin;
+                    document.getElementById('alt').innerText = dom < 40 ? 'HIGH' : 'LOW';
                 }
-                grid.innerHTML = html;
-            } catch (e) {
-                grid.innerHTML = '<p class="text-red-500">Error: Could not load prices.</p>';
-            }
+                if(fngRes.status === 'fulfilled') {
+                    const fng = await fngRes.value.json();
+                    document.getElementById('fng').innerText = fng.data[0].value;
+                }
+
+                // Update Prices (Binance)
+                if(priceRes.status === 'fulfilled') {
+                    const tickers = await priceRes.value.json();
+                    const targets = ["BTCUSDT", "ETHUSDT", "DOGEUSDT"];
+                    const grid = document.getElementById('grid');
+                    grid.innerHTML = '';
+                    
+                    tickers.filter(t => targets.includes(t.symbol)).forEach(t => {
+                        const price = parseFloat(t.lastPrice);
+                        const change = parseFloat(t.priceChangePercent);
+                        const sym = t.symbol.replace('USDT', '');
+                        const color = change >= 0 ? 'text-green-500' : 'text-red-500';
+                        const priceDisplay = sym === 'DOGE' ? price.toFixed(5) : price.toLocaleString();
+
+                        grid.innerHTML += `
+                            <div class="bg-slate-900 p-5 rounded-xl border border-slate-800 flex justify-between items-center">
+                                <div><p class="text-[10px] text-slate-400 font-bold">${sym}</p><p class="text-xl font-bold">$${priceDisplay}</p></div>
+                                <div class="text-right"><p class="text-lg font-bold ${color}">${change.toFixed(2)}%</p></div>
+                            </div>
+                        `;
+                    });
+                }
+                document.getElementById('status').innerText = 'LIVE ' + new Date().toLocaleTimeString();
+            } catch(e) { document.getElementById('status').innerText = 'ERROR'; }
         }
         update();
-        setInterval(update, 10000);
+        setInterval(update, 30000);
     </script>
 </body>
 </html>
