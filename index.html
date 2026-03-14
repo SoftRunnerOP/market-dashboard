@@ -86,7 +86,7 @@
             return { text: `${n >= 0 ? '+' : ''}${n.toFixed(2)}%`, cls };
         }
 
-        async function update() {
+        async function updateIndicesFromSnapshot() {
             try {
                 const res = await fetch("data.json?t=" + Date.now(), { cache: 'no-cache' });
                 const data = await res.json();
@@ -159,13 +159,13 @@
                         : Number(info.price || 0).toLocaleString(undefined, { minimumFractionDigits: 2 });
                     const change = changeN.toFixed(2);
                     grid.innerHTML += `
-                        <div class="bg-slate-900 p-5 rounded-xl border border-slate-800 flex justify-between items-center">
+                        <div class="bg-slate-900 p-5 rounded-xl border border-slate-800 flex justify-between items-center" data-sym="${sym}">
                             <div>
                                 <p class="text-slate-400 font-bold text-sm tracking-wider">${sym}</p>
-                                <p class="font-bold text-lg">$${price}</p>
+                                <p class="font-bold text-lg" data-role="price">$${price}</p>
                             </div>
                             <div class="text-right">
-                                <p class="font-bold ${color}">${change}%</p>
+                                <p class="font-bold ${color}" data-role="change">${change}%</p>
                             </div>
                         </div>
                     `;
@@ -175,8 +175,34 @@
             }
         }
 
-        update();
-        setInterval(update, 15000);
+        async function updateLivePrices() {
+            try {
+                const r = await fetch("https://api.binance.com/api/v3/ticker/24hr", { cache: 'no-cache' });
+                const tickers = await r.json();
+                const map = { BTC: 'BTCUSDT', ETH: 'ETHUSDT', DOGE: 'DOGEUSDT' };
+                document.querySelectorAll('[data-sym]').forEach(card => {
+                    const sym = card.getAttribute('data-sym');
+                    const ticker = tickers.find(t => t.symbol === map[sym]);
+                    if (!ticker) return;
+                    const priceN = Number(ticker.lastPrice || 0);
+                    const chN = Number(ticker.priceChangePercent || 0);
+                    const priceText = sym === 'DOGE'
+                        ? priceN.toFixed(5)
+                        : priceN.toLocaleString(undefined, { minimumFractionDigits: 2 });
+                    const chText = `${chN.toFixed(2)}%`;
+                    const chEl = card.querySelector('[data-role="change"]');
+                    card.querySelector('[data-role="price"]').textContent = `$${priceText}`;
+                    chEl.textContent = chText;
+                    chEl.className = `font-bold ${chN >= 0 ? 'text-green-500' : 'text-red-500'}`;
+                });
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        updateIndicesFromSnapshot();
+        setInterval(updateIndicesFromSnapshot, 60000); // heavy metrics once per minute
+        setInterval(updateLivePrices, 10000); // near-real-time prices each 10s
     </script>
 </body>
 </html>
