@@ -6,6 +6,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
 OUT = ROOT / "hq_data.json"
+CONFIG_PATH = Path.home() / ".openclaw" / "openclaw.json"
 
 
 def run_json(cmd):
@@ -18,60 +19,86 @@ def run_json(cmd):
         return {"error": "invalid json", "raw": p.stdout[:500], "cmd": " ".join(cmd)}
 
 
-def classify_session(s):
-    updated = s.get("updatedAt")
-    if not updated:
-        return "unknown"
-    # updatedAt is ms epoch
+def load_bots_from_config():
+    bots = []
+    if not CONFIG_PATH.exists():
+        return bots
+    cfg = json.loads(CONFIG_PATH.read_text())
+    tg = ((cfg.get("channels") or {}).get("telegram") or {})
+    accounts = tg.get("accounts") or {}
+    for acc_id, acc in accounts.items():
+        bots.append({
+            "id": acc_id,
+            "name": acc.get("name") or acc_id,
+            "enabled": bool(acc.get("enabled", True)),
+            "username": acc.get("username") or "",
+            "role": "trading" if "trader" in acc_id else ("design/marketing" if "graphic" in acc_id else "general")
+        })
+    # default account
+    if tg.get("enabled", False):
+        bots.append({
+            "id": "default",
+            "name": "Main",
+            "enabled": True,
+            "username": "",
+            "role": "director"
+        })
+    return bots
+
+
+def classify_bot_status(bot_id, sessions):
+    # default session key usually has no account id segment
+    if bot_id == "default":
+        matched = [s for s in sessions if ":telegram:direct:" in s.get("key", "")]
+    else:
+        matched = [s for s in sessions if f":telegram:{bot_id}:" in s.get("key", "")]
+
+    if not matched:
+        return "offline", None
+
+    latest = max(matched, key=lambda x: x.get("updatedAt", 0))
     now_ms = int(datetime.datetime.now(datetime.timezone.utc).timestamp() * 1000)
-    delta_min = (now_ms - int(updated)) / 60000
+    delta_min = (now_ms - int(latest.get("updatedAt", 0))) / 60000
+
     if delta_min <= 2:
-        return "working"
-    if delta_min <= 20:
-        return "idle"
-    return "offline"
+        return "working", latest.get("key")
+    if delta_min <= 30:
+        return "idle", latest.get("key")
+    return "offline", latest.get("key")
 
 
 def main():
     status = run_json(["openclaw", "status", "--json"])
-    sessions = run_json(["openclaw", "sessions", "--all-agents", "--json"])
+    sessions_raw = run_json(["openclaw", "sessions", "--all-agents", "--json"])
 
-    # Gateway cron jobs via CLI tool output unavailable as json in openclaw, use internal cron tool not available here.
-    # Keep minimal robust summary from sessions.
-    cards = []
-    if isinstance(sessions, dict):
-        # openclaw sessions --json may return array or dict depending version
-        rows = sessions.get("sessions") if "sessions" in sessions else sessions.get("rows")
-        if rows is None and isinstance(sessions.get("data"), list):
-            rows = sessions.get("data")
-        if rows is None and isinstance(sessions, list):
-            rows = sessions
-    elif isinstance(sessions, list):
-        rows = sessions
+    if isinstance(sessions_raw, list):
+        sessions = sessions_raw
+    elif isinstance(sessions_raw, dict):
+        sessions = sessions_raw.get("sessions") or sessions_raw.get("rows") or sessions_raw.get("data") or []
     else:
-        rows = []
+        sessions = []
 
-    for s in rows or []:
-        cards.append({
-            "key": s.get("key", "unknown"),
-            "name": s.get("displayName") or s.get("key", "unknown"),
-            "model": s.get("model", "-"),
-            "tokens": s.get("totalTokens", 0),
-            "status": classify_session(s),
-            "updatedAt": s.get("updatedAt"),
-            "kind": s.get("kind", "-")
+    bots = load_bots_from_config()
+
+    bot_cards = []
+    for b in bots:
+        st, key = classify_bot_status(b["id"], sessions)
+        bot_cards.append({
+            **b,
+            "status": st,
+            "activeKey": key
         })
 
     out = {
         "generatedAt": datetime.datetime.now().isoformat(timespec="seconds"),
-        "status": status,
-        "sessions": cards,
         "summary": {
-            "total": len(cards),
-            "working": sum(1 for c in cards if c["status"] == "working"),
-            "idle": sum(1 for c in cards if c["status"] == "idle"),
-            "offline": sum(1 for c in cards if c["status"] == "offline")
-        }
+            "bots": len(bot_cards),
+            "working": sum(1 for b in bot_cards if b["status"] == "working"),
+            "idle": sum(1 for b in bot_cards if b["status"] == "idle"),
+            "offline": sum(1 for b in bot_cards if b["status"] == "offline")
+        },
+        "bots": bot_cards,
+        "status": status
     }
 
     OUT.write_text(json.dumps(out, ensure_ascii=False, indent=2))
