@@ -3,49 +3,44 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mr X Pro Intelligence</title>
+    <title>Mr X Pro Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-black text-white p-4">
     <div class="max-w-xl mx-auto">
-        <h1 class="text-xl font-bold mb-4 text-blue-500">Live Dashboard</h1>
-        <div id="status" class="text-[10px] text-slate-500 mb-4">Loading...</div>
-        
-        <!-- Metrics Grid -->
-        <div class="grid grid-cols-2 gap-4 mb-4">
-            <div class="bg-slate-900 p-4 rounded-xl border border-slate-800"><p class="text-[10px] text-slate-500">F&G INDEX</p><p id="fng" class="text-lg font-bold">--</p></div>
-            <div class="bg-slate-900 p-4 rounded-xl border border-slate-800"><p class="text-[10px] text-slate-500">BTC DOM</p><p id="dom" class="text-lg font-bold">--%</p></div>
+        <h1 class="text-xl font-bold mb-6 text-blue-500">Live Dashboard</h1>
+        <div id="grid" class="grid grid-cols-1 gap-4">
+            <p class="text-slate-500 text-center py-10">Syncing data...</p>
         </div>
-        
-        <div id="grid" class="grid grid-cols-1 gap-4"></div>
     </div>
     <script>
         async function update() {
             try {
-                // Fetch internal data.json
+                // Now fetching from data.json that GitHub Actions generates!
                 const res = await fetch("data.json?t=" + new Date().getTime());
                 const data = await res.json();
-                
-                document.getElementById('fng').innerText = data.fng;
-                document.getElementById('dom').innerText = data.dom.toFixed(1) + '%';
-                
                 const grid = document.getElementById('grid');
                 grid.innerHTML = '';
                 
+                // Add Metrics
+                grid.innerHTML += `
+                    <div class="grid grid-cols-2 gap-4 mb-2">
+                        <div class="bg-slate-900 p-4 rounded-xl border border-slate-800"><p class="text-[10px] text-slate-500">F&G</p><p class="text-xl font-bold">${data.fng}</p></div>
+                        <div class="bg-slate-900 p-4 rounded-xl border border-slate-800"><p class="text-[10px] text-slate-500">BTC DOM</p><p class="text-xl font-bold">${data.dom.toFixed(1)}%</p></div>
+                    </div>
+                `;
+
+                // Add Assets
                 for (const [sym, info] of Object.entries(data.prices)) {
                     const color = info.change >= 0 ? 'text-green-500' : 'text-red-500';
-                    const priceDisplay = sym === 'DOGE' ? info.price.toFixed(5) : info.price.toLocaleString();
                     grid.innerHTML += `
                         <div class="bg-slate-900 p-5 rounded-xl border border-slate-800 flex justify-between items-center">
                             <span class="text-slate-400 font-bold">${sym}</span>
-                            <span class="font-bold text-lg">$${priceDisplay} <span class="${color} text-sm">(${info.change.toFixed(2)}%)</span></span>
+                            <span class="font-bold text-lg">$${info.price.toLocaleString(undefined, {minimumFractionDigits: 2})} <span class="${color} text-sm">(${info.change.toFixed(2)}%)</span></span>
                         </div>
                     `;
                 }
-                document.getElementById('status').innerText = 'Last Updated: ' + data.updated;
-            } catch (e) {
-                document.getElementById('status').innerText = 'Error: Refreshing...';
-            }
+            } catch (e) { console.error(e); }
         }
         update();
         setInterval(update, 30000);
