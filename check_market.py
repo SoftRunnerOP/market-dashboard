@@ -1,20 +1,22 @@
-import requests
+import market_dashboard
+import sys
 
-def check_assets():
-    ids = "bitcoin,ethereum,dogecoin"
-    url = f"https://api.coingecko.com/api/v3/simple/price?ids={ids}&vs_currencies=usd&include_24hr_change=true"
-    data = requests.get(url, timeout=10).json()
-    
+def check():
+    data = market_dashboard.get_data()
     alerts = []
-    for asset_id, info in data.items():
-        change = info.get('usd_24h_change', 0)
-        if abs(change) > 5:
-            alerts.append(f"{asset_id.upper()}: {change:.2f}%")
+    
+    # mapping ids back to names/symbols from market_dashboard
+    for id, symbol in market_dashboard.ASSETS.items():
+        change = data.get(id, {}).get('usd_24h_change', 0)
+        if abs(change) > 5.0:
+            alerts.append(f"{symbol}: {change:+.2f}%")
             
     if alerts:
-        print(f"ALERT: Significant market movement! {', '.join(alerts)}")
+        print("ALERT: The following assets have moved >5% in 24h:")
+        for alert in alerts:
+            print(f"- {alert}")
     else:
-        print("OK: All asset movements < 5%. No alerts needed.")
+        print("OK")
 
 if __name__ == "__main__":
-    check_assets()
+    check()
