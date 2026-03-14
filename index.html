@@ -6,31 +6,33 @@
     <title>Mr X Market Intelligence</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-slate-950 text-white p-6">
-    <div class="max-w-4xl mx-auto">
-        <h1 class="text-3xl font-bold mb-8 text-blue-400">Market Intelligence</h1>
+<body class="bg-black text-white p-4">
+    <div class="max-w-2xl mx-auto">
+        <header class="flex justify-between items-center mb-6">
+            <h1 class="text-xl font-bold text-blue-500">Market Intelligence</h1>
+            <div id="status" class="text-[10px] uppercase tracking-widest text-slate-500 font-mono">Syncing...</div>
+        </header>
         
-        <!-- Metrics Panel -->
-        <div class="grid grid-cols-2 gap-4 mb-8">
-            <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800">
-                <div class="text-slate-400 text-sm uppercase">Fear & Greed</div>
-                <div id="fng" class="text-3xl font-bold text-yellow-500">Loading...</div>
+        <!-- Key Market Indicators -->
+        <div class="grid grid-cols-2 gap-3 mb-6">
+            <div class="bg-slate-900 p-4 rounded-xl border border-slate-800">
+                <p class="text-[10px] uppercase text-slate-500">Fear & Greed</p>
+                <div id="fng" class="text-2xl font-bold">--</div>
             </div>
-            <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800">
-                <div class="text-slate-400 text-sm uppercase">BTC Dominance</div>
-                <div id="dom" class="text-3xl font-bold text-blue-400">Loading...</div>
+            <div class="bg-slate-900 p-4 rounded-xl border border-slate-800">
+                <p class="text-[10px] uppercase text-slate-500">BTC Dominance</p>
+                <div id="dom" class="text-2xl font-bold">--%</div>
             </div>
         </div>
 
-        <!-- Assets Grid -->
-        <div id="grid" class="grid grid-cols-1 md:grid-cols-3 gap-6"></div>
+        <!-- Price Grid -->
+        <div id="grid" class="grid grid-cols-1 gap-4"></div>
     </div>
     <script>
         async function update() {
             try {
-                // Fetch Prices & Global Data
                 const [priceRes, globalRes, fngRes] = await Promise.all([
-                    fetch("https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,dogecoin&vs_currencies=usd&include_24hr_change=true"),
+                    fetch("https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,dogecoin,solana,cardano&vs_currencies=usd&include_24hr_change=true"),
                     fetch("https://api.coingecko.com/api/v3/global"),
                     fetch("https://api.alternative.me/fng/")
                 ]);
@@ -38,25 +40,27 @@
                 const global = (await globalRes.json()).data;
                 const fng = await fngRes.json();
                 
-                // Update Metrics
                 document.getElementById('dom').innerText = global.market_cap_percentage.bitcoin.toFixed(1) + '%';
                 document.getElementById('fng').innerText = fng.data[0].value;
 
-                // Update Grid
                 const grid = document.getElementById('grid');
                 grid.innerHTML = '';
                 for (const [id, info] of Object.entries(data)) {
                     const color = info.usd_24h_change >= 0 ? 'text-green-500' : 'text-red-500';
-                    const price = id === 'dogecoin' ? info.usd.toFixed(4) : info.usd.toLocaleString();
                     grid.innerHTML += `
-                        <div class="bg-slate-900 p-6 rounded-xl border border-slate-700">
-                            <h2 class="text-xs uppercase tracking-widest text-slate-400">${id}</h2>
-                            <p class="text-3xl font-bold my-2">$${price}</p>
-                            <p class="text-md font-bold ${color}">${info.usd_24h_change.toFixed(2)}%</p>
+                        <div class="bg-slate-900 p-5 rounded-xl flex justify-between items-center border border-slate-800">
+                            <div>
+                                <p class="text-sm font-bold uppercase text-slate-300">${id}</p>
+                                <p class="text-2xl font-bold">$${info.usd.toLocaleString()}</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-lg font-bold ${color}">${info.usd_24h_change.toFixed(2)}%</p>
+                            </div>
                         </div>
                     `;
                 }
-            } catch (e) { console.error(e); }
+                document.getElementById('status').innerText = 'Live';
+            } catch (e) { document.getElementById('status').innerText = 'Sync Error'; }
         }
         update();
         setInterval(update, 30000);
