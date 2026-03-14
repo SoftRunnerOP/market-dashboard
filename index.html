@@ -3,59 +3,49 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mr X Market Dash</title>
+    <title>Mr X Pro Intelligence</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-black text-white p-4">
     <div class="max-w-xl mx-auto">
         <h1 class="text-xl font-bold mb-4 text-blue-500">Live Dashboard</h1>
-        <div id="status" class="text-[10px] text-slate-500 font-mono mb-4">Starting...</div>
-        <div id="metrics" class="grid grid-cols-2 gap-4 mb-4">
-            <div class="bg-slate-900 p-4 rounded-xl border border-slate-800"><p class="text-[10px] text-slate-500">F&G INDEX</p><p id="fng" class="text-lg font-bold">...</p></div>
-            <div class="bg-slate-900 p-4 rounded-xl border border-slate-800"><p class="text-[10px] text-slate-500">BTC DOM</p><p id="dom" class="text-lg font-bold">...</p></div>
+        <div id="status" class="text-[10px] text-slate-500 mb-4">Loading...</div>
+        
+        <!-- Metrics Grid -->
+        <div class="grid grid-cols-2 gap-4 mb-4">
+            <div class="bg-slate-900 p-4 rounded-xl border border-slate-800"><p class="text-[10px] text-slate-500">F&G INDEX</p><p id="fng" class="text-lg font-bold">--</p></div>
+            <div class="bg-slate-900 p-4 rounded-xl border border-slate-800"><p class="text-[10px] text-slate-500">BTC DOM</p><p id="dom" class="text-lg font-bold">--%</p></div>
         </div>
+        
         <div id="grid" class="grid grid-cols-1 gap-4"></div>
     </div>
     <script>
         async function update() {
-            document.getElementById('status').innerText = 'Updating...';
-            
-            // 1. Fetch Prices
             try {
-                const res = await fetch("https://api.binance.com/api/v3/ticker/24hr");
-                const tickers = await res.json();
+                // Fetch internal data.json
+                const res = await fetch("data.json?t=" + new Date().getTime());
+                const data = await res.json();
+                
+                document.getElementById('fng').innerText = data.fng;
+                document.getElementById('dom').innerText = data.dom.toFixed(1) + '%';
+                
                 const grid = document.getElementById('grid');
                 grid.innerHTML = '';
-                const symbols = ["BTCUSDT", "ETHUSDT", "DOGEUSDT"];
-                tickers.filter(t => symbols.includes(t.symbol)).forEach(t => {
-                    const price = parseFloat(t.lastPrice);
-                    const change = parseFloat(t.priceChangePercent);
-                    const sym = t.symbol.replace('USDT', '');
-                    const color = change >= 0 ? 'text-green-500' : 'text-red-500';
-                    const priceDisplay = sym === 'DOGE' ? price.toFixed(5) : price.toLocaleString();
+                
+                for (const [sym, info] of Object.entries(data.prices)) {
+                    const color = info.change >= 0 ? 'text-green-500' : 'text-red-500';
+                    const priceDisplay = sym === 'DOGE' ? info.price.toFixed(5) : info.price.toLocaleString();
                     grid.innerHTML += `
                         <div class="bg-slate-900 p-5 rounded-xl border border-slate-800 flex justify-between items-center">
                             <span class="text-slate-400 font-bold">${sym}</span>
-                            <span class="font-bold text-lg">$${priceDisplay} <span class="${color} text-sm">(${change.toFixed(2)}%)</span></span>
+                            <span class="font-bold text-lg">$${priceDisplay} <span class="${color} text-sm">(${info.change.toFixed(2)}%)</span></span>
                         </div>
                     `;
-                });
-            } catch (e) { console.error("Price load error"); }
-
-            // 2. Fetch Metrics (Independently)
-            try {
-                const domRes = await fetch("https://api.coingecko.com/api/v3/global");
-                const domData = await domRes.json();
-                document.getElementById('dom').innerText = domData.data.market_cap_percentage.bitcoin.toFixed(1) + '%';
-            } catch (e) { document.getElementById('dom').innerText = 'N/A'; }
-
-            try {
-                const fngRes = await fetch("https://api.alternative.me/fng/");
-                const fngData = await fngRes.json();
-                document.getElementById('fng').innerText = fngData.data[0].value;
-            } catch (e) { document.getElementById('fng').innerText = 'N/A'; }
-
-            document.getElementById('status').innerText = 'Live';
+                }
+                document.getElementById('status').innerText = 'Last Updated: ' + data.updated;
+            } catch (e) {
+                document.getElementById('status').innerText = 'Error: Refreshing...';
+            }
         }
         update();
         setInterval(update, 30000);
