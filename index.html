@@ -3,38 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mr X Dashboard</title>
+    <title>Mr X Market Dash</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-slate-950 text-white p-6">
     <div class="max-w-4xl mx-auto">
         <h1 class="text-3xl font-bold mb-8 text-blue-400">Market Sentiment Dashboard</h1>
-        <div id="status" class="text-slate-500 mb-4">Loading market data...</div>
+        <div id="status" class="text-slate-500 mb-4">Live</div>
         <div id="grid" class="grid grid-cols-1 md:grid-cols-3 gap-6"></div>
     </div>
     <script>
         async function update() {
             try {
-                document.getElementById('status').innerText = 'Updating...';
                 const res = await fetch("https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,dogecoin&vs_currencies=usd&include_24hr_change=true");
                 const data = await res.json();
                 const grid = document.getElementById('grid');
                 grid.innerHTML = '';
                 for (const [id, info] of Object.entries(data)) {
-                    const color = info.usd_24h_change >= 0 ? 'text-green-500' : 'text-red-500';
+                    const change = info.usd_24h_change;
+                    const color = change >= 0 ? 'text-green-500' : 'text-red-500';
                     const price = id === 'dogecoin' ? info.usd.toFixed(4) : info.usd.toLocaleString();
                     grid.innerHTML += `
                         <div class="bg-slate-900 p-6 rounded-xl border border-slate-700">
                             <h2 class="text-sm uppercase tracking-widest text-slate-400">${id}</h2>
                             <p class="text-3xl font-bold my-2">$${price}</p>
-                            <p class="text-md font-bold ${color}">${info.usd_24h_change.toFixed(2)}%</p>
+                            <p class="text-md font-bold ${color}">${change.toFixed(2)}%</p>
                         </div>
                     `;
                 }
-                document.getElementById('status').innerText = 'Live';
-            } catch (e) {
-                document.getElementById('status').innerText = 'Error loading data: ' + e.message;
-            }
+            } catch (e) { console.error(e); }
         }
         update();
         setInterval(update, 30000);
