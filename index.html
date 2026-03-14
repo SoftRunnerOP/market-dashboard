@@ -3,42 +3,60 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mr X Dashboard</title>
+    <title>Mr X Market Intelligence</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-slate-950 text-white p-6">
     <div class="max-w-4xl mx-auto">
         <h1 class="text-3xl font-bold mb-8 text-blue-400">Market Intelligence</h1>
-        <div id="status" class="text-slate-500 mb-4 font-mono text-sm">Initializing...</div>
+        
+        <!-- Metrics Panel -->
+        <div class="grid grid-cols-2 gap-4 mb-8">
+            <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800">
+                <div class="text-slate-400 text-sm uppercase">Fear & Greed</div>
+                <div id="fng" class="text-3xl font-bold text-yellow-500">Loading...</div>
+            </div>
+            <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800">
+                <div class="text-slate-400 text-sm uppercase">BTC Dominance</div>
+                <div id="dom" class="text-3xl font-bold text-blue-400">Loading...</div>
+            </div>
+        </div>
+
+        <!-- Assets Grid -->
         <div id="grid" class="grid grid-cols-1 md:grid-cols-3 gap-6"></div>
     </div>
     <script>
         async function update() {
             try {
-                document.getElementById('status').innerText = 'Fetching data...';
-                // Direct fetch without proxy
-                const res = await fetch("https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,dogecoin&vs_currencies=usd&include_24hr_change=true");
-                const data = await res.json();
+                // Fetch Prices & Global Data
+                const [priceRes, globalRes, fngRes] = await Promise.all([
+                    fetch("https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,dogecoin&vs_currencies=usd&include_24hr_change=true"),
+                    fetch("https://api.coingecko.com/api/v3/global"),
+                    fetch("https://api.alternative.me/fng/")
+                ]);
+                const data = await priceRes.json();
+                const global = (await globalRes.json()).data;
+                const fng = await fngRes.json();
                 
+                // Update Metrics
+                document.getElementById('dom').innerText = global.market_cap_percentage.bitcoin.toFixed(1) + '%';
+                document.getElementById('fng').innerText = fng.data[0].value;
+
+                // Update Grid
                 const grid = document.getElementById('grid');
                 grid.innerHTML = '';
-                
                 for (const [id, info] of Object.entries(data)) {
-                    const change = info.usd_24h_change || 0;
-                    const color = change >= 0 ? 'text-green-500' : 'text-red-500';
+                    const color = info.usd_24h_change >= 0 ? 'text-green-500' : 'text-red-500';
                     const price = id === 'dogecoin' ? info.usd.toFixed(4) : info.usd.toLocaleString();
                     grid.innerHTML += `
                         <div class="bg-slate-900 p-6 rounded-xl border border-slate-700">
                             <h2 class="text-xs uppercase tracking-widest text-slate-400">${id}</h2>
                             <p class="text-3xl font-bold my-2">$${price}</p>
-                            <p class="text-md font-bold ${color}">${change.toFixed(2)}%</p>
+                            <p class="text-md font-bold ${color}">${info.usd_24h_change.toFixed(2)}%</p>
                         </div>
                     `;
                 }
-                document.getElementById('status').innerText = 'Live';
-            } catch (e) {
-                document.getElementById('status').innerText = 'Connection Error: ' + e.message;
-            }
+            } catch (e) { console.error(e); }
         }
         update();
         setInterval(update, 30000);
