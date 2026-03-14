@@ -18,7 +18,6 @@ def to_float(val, default=0.0):
 def compute_signal(fng_value: int, btc_change: float, dom_value: float, funding_btc: float) -> str:
     score = 50
 
-    # Fear/greed (contrarian)
     if fng_value <= 20:
         score += 20
     elif fng_value <= 35:
@@ -28,19 +27,16 @@ def compute_signal(fng_value: int, btc_change: float, dom_value: float, funding_
     elif fng_value >= 65:
         score -= 10
 
-    # BTC momentum
     if btc_change >= 2:
         score += 10
     elif btc_change <= -2:
         score -= 10
 
-    # Dominance pressure on alts
     if dom_value >= 58:
         score -= 10
     elif dom_value <= 45:
         score += 10
 
-    # Funding overheating
     if funding_btc > 0.03:
         score -= 10
     elif funding_btc < -0.01:
@@ -57,6 +53,30 @@ def compute_signal(fng_value: int, btc_change: float, dom_value: float, funding_
     return "NEUTRAL"
 
 
+def compute_risk_level(fng_value: int, btc_change: float, funding_btc: float, dxy_change: float) -> str:
+    risk = 0
+
+    if btc_change <= -3:
+        risk += 2
+    elif btc_change <= -1.5:
+        risk += 1
+
+    if funding_btc >= 0.02:
+        risk += 1
+
+    if dxy_change >= 0.5:
+        risk += 1
+
+    if fng_value < 15:
+        risk += 1
+
+    if risk >= 4:
+        return "HIGH"
+    if risk >= 2:
+        return "MEDIUM"
+    return "LOW"
+
+
 def fetch_data():
     data = {
         "fng": "N/A",
@@ -67,6 +87,7 @@ def fetch_data():
         "dxy_change": 0.0,
         "alt_season": "N/A",
         "signal": "NEUTRAL",
+        "risk_level": "MEDIUM",
         "funding_btc": 0.0,
         "oi_btc": 0.0,
         "oi_btc_change": 0.0,
@@ -86,7 +107,6 @@ def fetch_data():
     old_dom = to_float(data.get("dom", 56.0), 56.0)
     old_oi = to_float(data.get("oi_btc", 0.0), 0.0)
 
-    # 1) Binance spot prices
     try:
         r = requests.get("https://api.binance.com/api/v3/ticker/24hr", timeout=10)
         tickers = r.json() if r.ok else []
@@ -106,7 +126,6 @@ def fetch_data():
     except Exception:
         pass
 
-    # 2) CoinGecko global dominance
     try:
         headers = {'x-cg-demo-api-key': API_KEY}
         g = requests.get("https://api.coingecko.com/api/v3/global", headers=headers, timeout=10).json()
@@ -117,7 +136,6 @@ def fetch_data():
     except Exception:
         pass
 
-    # 3) Fear & Greed + delta
     try:
         f = requests.get("https://api.alternative.me/fng/?limit=2", timeout=10).json()
         now_v = float(f['data'][0]['value'])
@@ -127,7 +145,6 @@ def fetch_data():
     except Exception:
         pass
 
-    # 4) DXY + daily delta from open/close
     try:
         dxy_csv = requests.get("https://stooq.com/q/l/?s=dx.f&f=sd2t2ohlcv&h&e=csv", timeout=10).text.strip().splitlines()
         if len(dxy_csv) >= 2:
@@ -139,7 +156,6 @@ def fetch_data():
     except Exception:
         pass
 
-    # 5) Funding + OI from Binance futures
     try:
         p = requests.get("https://fapi.binance.com/fapi/v1/premiumIndex?symbol=BTCUSDT", timeout=10).json()
         data['funding_btc'] = float(p.get('lastFundingRate', 0.0)) * 100
@@ -154,12 +170,14 @@ def fetch_data():
     except Exception:
         pass
 
-    # 6) Composite signal
     btc_change = to_float(data.get('prices', {}).get('BTC', {}).get('change', 0.0), 0.0)
     fng_int = int(to_float(data.get('fng', 50), 50))
     dom_float = to_float(data.get('dom', 56.0), 56.0)
     funding = to_float(data.get('funding_btc', 0.0), 0.0)
+    dxy_change = to_float(data.get('dxy_change', 0.0), 0.0)
+
     data['signal'] = compute_signal(fng_int, btc_change, dom_float, funding)
+    data['risk_level'] = compute_risk_level(fng_int, btc_change, funding, dxy_change)
 
     data['updated'] = time.strftime("%H:%M:%S")
     with open("data.json", "w") as f:

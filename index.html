@@ -16,6 +16,7 @@
             <div class="bg-blue-900/20 p-6 rounded-2xl border border-blue-500/30 text-center col-span-2 mb-2">
                 <p class="text-[9px] text-slate-400 uppercase tracking-widest">Market Signal</p>
                 <p id="signal" class="text-3xl font-black text-blue-400">LOADING...</p>
+                <p id="risk" class="text-sm font-bold mt-2 text-yellow-300">RISK: --</p>
             </div>
 
             <div class="bg-slate-900 p-4 rounded-xl border border-slate-800 text-center">
@@ -70,6 +71,12 @@
                 const data = await res.json();
 
                 document.getElementById('signal').innerText = data.signal || 'NEUTRAL';
+                const risk = data.risk_level || 'MEDIUM';
+                const riskCls = risk === 'HIGH' ? 'text-red-400' : (risk === 'LOW' ? 'text-green-400' : 'text-yellow-300');
+                const riskEl = document.getElementById('risk');
+                riskEl.textContent = `RISK: ${risk}`;
+                riskEl.className = `text-sm font-bold mt-2 ${riskCls}`;
+
                 document.getElementById('fng').innerText = data.fng || 'N/A';
                 document.getElementById('dom').innerText = data.dom || 'N/A';
                 document.getElementById('dxy').innerText = data.dxy || 'N/A';
