@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Pixel Team Office</title>
   <style>
-    body { margin:0; background:#0c1016; color:#e5e7eb; font-family: ui-monospace, Menlo, monospace; }
+    body { margin:0; background:#0b0f14; color:#e5e7eb; font-family: ui-monospace, Menlo, monospace; }
     .wrap { max-width: 1180px; margin: 0 auto; padding: 14px; }
     .top { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
     .chip { background:#111827; border:1px solid #263043; border-radius:10px; padding:6px 10px; font-size:12px; }
@@ -20,122 +20,100 @@
       <div id="ts" class="chip">обновление…</div>
     </div>
     <canvas id="cv" width="1120" height="760"></canvas>
-    <div class="hint">🟢 working · 🟡 idle · ⚫ offline · свободные места заполняются новыми ботами автоматически</div>
+    <div class="hint">🟢 working · 🟡 idle · ⚫ offline · zzz = сонный режим</div>
   </div>
 
   <script>
     const cv = document.getElementById('cv');
     const ctx = cv.getContext('2d');
 
-    const seats = [];
-    // like reference: 4 rows, 5 columns + central desk
-    let id = 0;
-    for (let r=0; r<4; r++) {
-      for (let c=0; c<5; c++) {
-        seats.push({id:id++, x:120 + c*180, y:120 + r*130});
-      }
-    }
+    // Seat map with aisles + lounge area
+    const seats = [
+      {x:120,y:130},{x:300,y:130},{x:480,y:130},{x:660,y:130},{x:840,y:130},
+      {x:120,y:250},{x:300,y:250},{x:480,y:250},{x:660,y:250},{x:840,y:250},
+      {x:120,y:450},{x:300,y:450},{x:480,y:450},{x:660,y:450},{x:840,y:450},
+      {x:120,y:570},{x:300,y:570},{x:480,y:570},{x:660,y:570},{x:840,y:570}
+    ];
 
     function rect(x,y,w,h,c){ ctx.fillStyle = c; ctx.fillRect(x,y,w,h); }
     function txt(t,x,y,c='#111',s=11){ ctx.fillStyle=c; ctx.font=`${s}px ui-monospace`; ctx.fillText(t,x,y); }
-
-    function statusColor(st){
-      if (st==='working') return '#22c55e';
-      if (st==='idle') return '#f59e0b';
-      return '#64748b';
-    }
+    function statusColor(st){ return st==='working' ? '#22c55e' : st==='idle' ? '#f59e0b' : '#64748b'; }
 
     function drawWoodHeader(){
-      // wooden top wall
-      for(let x=0; x<cv.width; x+=8){
-        rect(x,0,8,90, (x/8)%2===0 ? '#8f4e2f' : '#9b5634');
-      }
-      // curtains/windows
-      for(let i=0;i<5;i++){
-        const wx=70+i*205;
-        rect(wx,12,44,30,'#cbd5e1');
-        rect(wx+14,8,16,8,'#e5e7eb');
-      }
-      // bookshelf center
+      for(let x=0; x<cv.width; x+=8) rect(x,0,8,92,(x/8)%2===0?'#8f4e2f':'#9b5634');
+      for(let i=0;i<5;i++){ const wx=70+i*205; rect(wx,12,44,30,'#cbd5e1'); rect(wx+14,8,16,8,'#e5e7eb'); }
       rect(500,10,120,62,'#6b3f2a');
-      for(let i=0;i<5;i++){
-        rect(506+i*22,18,14,20,['#60a5fa','#f59e0b','#34d399','#f87171','#a78bfa'][i]);
-        rect(506+i*22,42,14,20,['#f59e0b','#34d399','#f87171','#a78bfa','#60a5fa'][i]);
-      }
+      for(let i=0;i<5;i++){ rect(506+i*22,18,14,20,['#60a5fa','#f59e0b','#34d399','#f87171','#a78bfa'][i]); rect(506+i*22,42,14,20,['#f59e0b','#34d399','#f87171','#a78bfa','#60a5fa'][i]); }
     }
 
     function drawTileFloor(){
-      for(let y=90; y<cv.height; y+=20){
+      for(let y=92; y<cv.height; y+=20){
         for(let x=0; x<cv.width; x+=20){
-          const c = ((x/20 + y/20) % 2 === 0) ? '#d8cfb2' : '#d0c6a6';
-          rect(x,y,20,20,c);
-          // grout
-          rect(x,y,1,20,'#c2b893');
-          rect(x,y,20,1,'#c2b893');
+          const c=((x/20+y/20)%2===0)?'#d8cfb2':'#d0c6a6';
+          rect(x,y,20,20,c); rect(x,y,1,20,'#c2b893'); rect(x,y,20,1,'#c2b893');
         }
       }
     }
 
     function drawPlant(x,y){
-      rect(x+4,y+12,10,10,'#6b7280');
-      rect(x,y,0,0,'#000');
-      rect(x,y+2,18,12,'#15803d');
-      rect(x+3,y-2,12,10,'#22c55e');
+      rect(x+4,y+14,12,10,'#6b7280');
+      rect(x,y+2,20,14,'#15803d');
+      rect(x+4,y-4,12,10,'#22c55e');
+    }
+
+    function drawSofa(x,y){
+      rect(x,y,84,24,'#1e3a8a');
+      rect(x+4,y+4,76,16,'#3b82f6');
+      rect(x+8,y+20,68,6,'#1e40af');
     }
 
     function drawDesk(x,y,bot,tick){
-      // white desk block like reference
+      const st = bot ? bot.status : 'offline';
+      const active = st==='working';
+
+      // desk
       rect(x,y,98,78,'#f3f4f6');
       rect(x+2,y+2,94,74,'#ffffff');
       rect(x+2,y+70,94,6,'#d1d5db');
 
-      // status
-      const st = bot ? bot.status : 'offline';
-      const active = st==='working';
-
-      // pixel face card (instead of monitor)
+      // pixel face card
       rect(x+34,y+24,32,30,'#111827');
       rect(x+36,y+26,28,26,'#1f2937');
-      // face skin
       rect(x+43,y+30,14,12,['#f1c27d','#e5b98a','#d9a97f'][tick%3]);
-      // eyes
       rect(x+46,y+34,2,2,'#0b0b0b');
       rect(x+52,y+34,2,2,'#0b0b0b');
-      // mouth varies by status
       if (st==='working') rect(x+48,y+39,4,1,'#0b0b0b');
       else if (st==='idle') rect(x+47,y+39,6,1,'#0b0b0b');
       else rect(x+48,y+39,4,1,'#64748b');
-      // tiny headset mic
       rect(x+41,y+33,2,6,'#94a3b8');
       rect(x+40,y+38,2,1,'#94a3b8');
 
-      // shoulders/body
+      // body + working arm move
       if(bot){
         rect(x+41,y+44,18,8,'#4b5563');
         if (active && tick%6<3) rect(x+35,y+46,4,3,'#64748b');
         if (active && tick%6>=3) rect(x+61,y+46,4,3,'#64748b');
       }
 
-      // status lamp right
+      // status lamp + sleeping effect
       rect(x+86,y+8,8,8,statusColor(st));
+      if (st==='offline' && bot && tick%20<10) txt('zzz', x+66, y+18, '#64748b', 9);
 
-      // nameplate (nickname color indicates status)
+      // nickname by status color
       if(bot){
         const nickBg = st==='working' ? '#14532d' : (st==='idle' ? '#7c2d12' : '#334155');
         const nickFg = st==='working' ? '#86efac' : (st==='idle' ? '#fdba74' : '#cbd5e1');
         rect(x+8,y+80,82,12,nickBg);
-        txt(bot.name.slice(0,14), x+12, y+89, nickFg, 10);
+        txt((bot.name||'Bot').slice(0,14),x+12,y+89,nickFg,10);
+      } else {
+        txt('Свободно',x,y+84,'#64748b',10);
       }
     }
 
     function normalizeBots(raw){
-      const bots=(raw||[]).filter(b=>b.role!=='director');
-      return bots.map((b,i)=>({
-        id:b.id||`bot-${i}`,
-        name:b.name||`Bot ${i+1}`,
-        status:b.status||'offline',
-        role:b.role||'general'
-      }));
+      return (raw||[])
+        .filter(b=>b.role!=='director')
+        .map((b,i)=>({id:b.id||`bot-${i}`,name:b.name||`Bot ${i+1}`,status:b.status||'offline',role:b.role||'general'}));
     }
 
     function drawScene(data){
@@ -144,23 +122,20 @@
       drawWoodHeader();
       drawTileFloor();
 
-      // top label
-      rect(120,98,180,24,'#dcfce7');
-      txt('✅ Crypto Start Team',130,114,'#166534',13);
-
-      // plants / decor
-      drawPlant(285,360); drawPlant(620,360); drawPlant(905,360);
-
-      const bots=normalizeBots(data.bots);
-      for(let i=0;i<seats.length;i++){
-        drawDesk(seats[i].x,seats[i].y,bots[i]||null,tick+i);
-      }
-
-      // center director desk (bigger)
-      const dx=510,dy=420;
+      // central director
+      const dx=510, dy=345;
       drawDesk(dx,dy,{name:'Xenon (Director)',status:'working'},tick);
 
-      // quick counts
+      // sofas + plants in central lounge
+      drawSofa(455,295); drawSofa(585,295);
+      drawPlant(540,298);
+      drawPlant(405,360); drawPlant(700,360); drawPlant(405,430); drawPlant(700,430);
+
+      // side corridor tables
+      const bots = normalizeBots(data.bots);
+      for(let i=0;i<seats.length;i++) drawDesk(seats[i].x, seats[i].y, bots[i]||null, tick+i);
+
+      // summary panel
       const w=bots.filter(b=>b.status==='working').length;
       const idle=bots.filter(b=>b.status==='idle').length;
       const off=bots.filter(b=>b.status==='offline').length;
@@ -168,19 +143,13 @@
       txt(`WORK ${w}  IDLE ${idle}  OFF ${off}`,872,126,'#93c5fd',12);
     }
 
-    async function fetchData(){
-      const r=await fetch('hq_data.json?t='+Date.now(),{cache:'no-cache'});
-      return await r.json();
-    }
-
     async function tick(){
       try{
-        const d=await fetchData();
+        const r=await fetch('hq_data.json?t='+Date.now(),{cache:'no-cache'});
+        const d=await r.json();
         document.getElementById('ts').textContent='обновлено: '+(d.generatedAt||'-');
         drawScene(d);
-      }catch{
-        drawScene({bots:[]});
-      }
+      }catch{ drawScene({bots:[]}); }
     }
 
     tick();
