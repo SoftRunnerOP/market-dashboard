@@ -89,29 +89,42 @@
       rect(x+2,y+2,94,74,'#ffffff');
       rect(x+2,y+70,94,6,'#d1d5db');
 
-      // monitor
+      // status
       const st = bot ? bot.status : 'offline';
       const active = st==='working';
-      const monColor = active ? (tick%16<8 ? '#1d4ed8' : '#2563eb') : '#374151';
-      rect(x+36,y+28,28,20,'#111827');
-      rect(x+38,y+30,24,16,monColor);
-      rect(x+45,y+48,10,3,'#334155');
 
-      // person top view (head+body)
+      // pixel face card (instead of monitor)
+      rect(x+34,y+24,32,30,'#111827');
+      rect(x+36,y+26,28,26,'#1f2937');
+      // face skin
+      rect(x+43,y+30,14,12,['#f1c27d','#e5b98a','#d9a97f'][tick%3]);
+      // eyes
+      rect(x+46,y+34,2,2,'#0b0b0b');
+      rect(x+52,y+34,2,2,'#0b0b0b');
+      // mouth varies by status
+      if (st==='working') rect(x+48,y+39,4,1,'#0b0b0b');
+      else if (st==='idle') rect(x+47,y+39,6,1,'#0b0b0b');
+      else rect(x+48,y+39,4,1,'#64748b');
+      // tiny headset mic
+      rect(x+41,y+33,2,6,'#94a3b8');
+      rect(x+40,y+38,2,1,'#94a3b8');
+
+      // shoulders/body
       if(bot){
-        rect(x+44,y+14,12,10,['#f1c27d','#e5b98a','#d9a97f'][tick%3]); // head
-        rect(x+42,y+24,16,8,'#4b5563'); // shoulders
-        if (active && tick%6<3) rect(x+33,y+36,4,3,'#64748b'); // typing arm
-        if (active && tick%6>=3) rect(x+64,y+36,4,3,'#64748b');
+        rect(x+41,y+44,18,8,'#4b5563');
+        if (active && tick%6<3) rect(x+35,y+46,4,3,'#64748b');
+        if (active && tick%6>=3) rect(x+61,y+46,4,3,'#64748b');
       }
 
       // status lamp right
       rect(x+86,y+8,8,8,statusColor(st));
 
-      // nameplate
+      // nameplate (nickname color indicates status)
       if(bot){
-        rect(x+8,y+80,82,12,'#0f172a');
-        txt(bot.name.slice(0,14), x+12, y+89, '#93c5fd', 10);
+        const nickBg = st==='working' ? '#14532d' : (st==='idle' ? '#7c2d12' : '#334155');
+        const nickFg = st==='working' ? '#86efac' : (st==='idle' ? '#fdba74' : '#cbd5e1');
+        rect(x+8,y+80,82,12,nickBg);
+        txt(bot.name.slice(0,14), x+12, y+89, nickFg, 10);
       }
     }
 
