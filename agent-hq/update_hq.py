@@ -34,15 +34,19 @@ def load_bots_from_config():
             "username": acc.get("username") or "",
             "role": "trading" if "trader" in acc_id else ("design/marketing" if "graphic" in acc_id else "general")
         })
-    # default account
-    if tg.get("enabled", False):
+    # Ensure one director (usually default account)
+    if not any(b.get('id') == 'default' for b in bots):
         bots.append({
             "id": "default",
             "name": "Main",
-            "enabled": True,
+            "enabled": bool(tg.get('enabled', True)),
             "username": "",
             "role": "director"
         })
+
+    for b in bots:
+        if b.get('id') == 'default':
+            b['role'] = 'director'
     return bots
 
 
