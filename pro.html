@@ -2,58 +2,42 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Mr X Pro Market</title>
+    <title>Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-black text-white p-4">
     <div class="max-w-xl mx-auto">
-        <h1 class="text-2xl font-black text-blue-500 mb-6 uppercase tracking-widest">Market Intelligence</h1>
-        <div id="status" class="text-[10px] text-slate-500 font-mono mb-4">Initializing...</div>
-        
-        <div class="grid grid-cols-2 gap-4 mb-6">
-            <div class="bg-slate-900 p-4 rounded-xl border border-slate-800"><p class="text-[10px] text-slate-500 uppercase">Fear & Greed</p><p id="fng" class="text-lg font-bold">--</p></div>
-            <div class="bg-slate-900 p-4 rounded-xl border border-slate-800"><p class="text-[10px] text-slate-500 uppercase">BTC DOM</p><p id="dom" class="text-lg font-bold">--</p></div>
+        <h1 class="text-xl font-bold mb-6 text-blue-500">Live Dashboard</h1>
+        <div id="grid" class="grid grid-cols-1 gap-4">
+            <p class="text-slate-500 text-center">Syncing data...</p>
         </div>
-        <div id="grid" class="space-y-3"></div>
     </div>
     <script>
-        const proxy = "https://api.allorigins.win/get?url=";
-        async function fetchAPI(url) {
-            const res = await fetch(proxy + encodeURIComponent(url));
-            const data = await res.json();
-            return JSON.parse(data.contents);
-        }
-
         async function update() {
-            document.getElementById('status').innerText = 'Updating...';
             try {
-                // Fetch F&G
-                fetchAPI("https://api.alternative.me/fng/").then(d => { 
-                    if(d) document.getElementById('fng').innerText = d.data[0].value; 
-                });
-                // Fetch DOM
-                fetchAPI("https://api.coingecko.com/api/v3/global").then(d => { 
-                    if(d) document.getElementById('dom').innerText = d.data.market_cap_percentage.bitcoin.toFixed(1) + '%'; 
-                });
-                // Fetch Prices
-                const res = await fetch("https://api.binance.com/api/v3/ticker/24hr");
-                const tickers = await res.json();
-                const grid = document.getElementById('grid');
-                grid.innerHTML = '';
-                ["BTCUSDT", "ETHUSDT", "DOGEUSDT"].forEach(sym => {
-                    const t = tickers.find(x => x.symbol === sym);
-                    if(t) {
-                        const price = parseFloat(t.lastPrice);
-                        const change = parseFloat(t.priceChangePercent);
-                        const color = change >= 0 ? 'text-green-500' : 'text-red-500';
-                        grid.innerHTML += `<div class="bg-slate-900 p-5 rounded-xl border border-slate-800 flex justify-between items-center"><span class="text-slate-400 font-bold">${sym.replace('USDT', '')}</span><span class="font-bold text-lg">$${price.toLocaleString(undefined, {minimumFractionDigits: 2})} <span class="${color} text-sm">(${change.toFixed(2)}%)</span></span></div>`;
-                    }
-                });
-                document.getElementById('status').innerText = 'Live';
-            } catch(e) { document.getElementById('status').innerText = 'Error: ' + e.message; }
+                // Fetch direct from the JSON file on GitHub
+                const res = await fetch("data.json?t=" + new Date().getTime());
+                const data = await res.json();
+                
+                let html = '<div class="grid grid-cols-2 gap-4 mb-4">';
+                html += '<div class="bg-slate-900 p-4 rounded-xl border border-slate-800"><p class="text-[10px] text-slate-500">F&G</p><p class="text-xl font-bold">'+data.fng+'</p></div>';
+                html += '<div class="bg-slate-900 p-4 rounded-xl border border-slate-800"><p class="text-[10px] text-slate-500">DOM</p><p class="text-xl font-bold">'+data.dom+'</p></div></div>';
+                
+                for (const [sym, info] of Object.entries(data.prices)) {
+                    const color = info.change >= 0 ? 'text-green-500' : 'text-red-500';
+                    const price = sym === 'DOGE' ? info.price.toFixed(5) : info.price.toLocaleString();
+                    html += `
+                        <div class="bg-slate-900 p-5 rounded-xl border border-slate-800 flex justify-between items-center">
+                            <span class="text-slate-400 font-bold">${sym}</span>
+                            <span class="font-bold text-lg">$${price} <span class="${color} text-sm">(${info.change.toFixed(2)}%)</span></span>
+                        </div>
+                    `;
+                }
+                document.getElementById('grid').innerHTML = html;
+            } catch(e) { document.getElementById('grid').innerHTML = '<p class="text-red-500">Waiting for data...</p>'; }
         }
         update();
-        setInterval(update, 30000);
+        setInterval(update, 5000);
     </script>
 </body>
 </html>

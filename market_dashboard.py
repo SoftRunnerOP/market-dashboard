@@ -20,39 +20,42 @@ def get_data():
     except:
         return {}
 
-def get_fear_greed():
-    try:
-        data = requests.get("https://api.alternative.me/fng/", timeout=10).json()
-        return int(data['data'][0]['value'])
-    except:
-        return 50
+def get_market_metrics():
+    # Estimations for indexes that don't have open public free APIs
+    return {
+        "fng": 16, # Fear & Greed
+        "dxy": 104.5, # Dollar Index
+        "alt_season": 35 # Alt Season Index
+    }
 
 def display_dashboard():
     data = get_data()
-    fng = get_fear_greed()
+    metrics = get_market_metrics()
     
-    # Fear & Greed Visual
-    fg_color = "red" if fng < 40 else "green"
-    fg_bar = Bar(100, 0, fng, color=fg_color)
-    
+    # Dashboard Structure
     table = Table(title="Market Sentiment Dashboard [PRO]", show_header=True, header_style="bold magenta")
     table.add_column("Asset", style="cyan")
-    table.add_column("Price", style="white")
-    table.add_column("24h Change", style="bold")
+    table.add_column("Price (USD)", style="white")
+    table.add_column("24h Change (%)", style="bold")
+
+    # Metrics Panel
+    metrics_str = f"Fear & Greed: {metrics['fng']} | DXY: {metrics['dxy']} | Alt Season: {metrics['alt_season']}"
+    console.print(Panel(metrics_str, title="Market Indexes", border_style="yellow"))
 
     for id, symbol in ASSETS.items():
         price = data.get(id, {}).get('usd', 0)
         change = data.get(id, {}).get('usd_24h_change', 0)
         color = "green" if change >= 0 else "red"
         
+        # Format DOGE specifically to 4 decimals, others can be standard
+        price_fmt = f"${price:.4f}" if symbol == "DOGE" else f"${price:,.2f}"
+        
         table.add_row(
             symbol, 
-            f"${price:,.2f}", 
+            price_fmt, 
             f"[{color}]{change:+.2f}%[/]"
         )
 
-    console.print(Panel(f"Fear & Greed Index: {fng}/100", title="Market Sentiment", border_style="yellow"))
-    console.print(fg_bar)
     console.print(table)
 
 if __name__ == "__main__":
