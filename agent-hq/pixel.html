@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pixel Office HQ</title>
+  <style>
+    :root { color-scheme: dark; }
+    body { margin:0; background:#0d1016; color:#e5e7eb; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+    .wrap { max-width: 1100px; margin: 0 auto; padding: 16px; }
+    .top { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+    .chip { background:#111827; border:1px solid #263043; border-radius:10px; padding:6px 10px; font-size:12px; }
+    canvas { width:100%; height:auto; image-rendering: pixelated; image-rendering: crisp-edges; background:#10151d; border:1px solid #273143; border-radius:14px; }
+    .legend { display:flex; gap:10px; flex-wrap:wrap; margin-top:10px; font-size:12px; color:#a6b0c2; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="top">
+      <h2 style="margin:0">🏢 Pixel Office HQ</h2>
+      <div id="ts" class="chip">обновление…</div>
+    </div>
+    <canvas id="cv" width="960" height="620"></canvas>
+    <div class="legend">
+      <span class="chip">🟢 working</span>
+      <span class="chip">🟡 idle</span>
+      <span class="chip">⚫ offline</span>
+      <span class="chip">мест: 16 (с запасом под проекты)</span>
+    </div>
+  </div>
+
+  <script>
+    const cv = document.getElementById('cv');
+    const ctx = cv.getContext('2d');
+    const PX = 2; // pixel scale
+
+    const layout = [];
+    // Generate 16 desks in 4x4 grid
+    let id = 0;
+    for (let r=0; r<4; r++) {
+      for (let c=0; c<4; c++) {
+        layout.push({ id:id++, x: 90 + c*210, y: 90 + r*125 });
+      }
+    }
+
+    function colorByStatus(st){
+      if (st==='working') return '#22c55e';
+      if (st==='idle') return '#f59e0b';
+      return '#6b7280';
+    }
+
+    function drawRect(x,y,w,h,col){ ctx.fillStyle=col; ctx.fillRect(x,y,w,h); }
+    function txt(t,x,y,col='#d1d5db',s=12){ ctx.fillStyle=col; ctx.font=`${s}px ui-monospace`; ctx.fillText(t,x,y); }
+
+    function drawDesk(x,y,bot,tick){
+      // table
+      drawRect(x, y, 140, 70, '#1f2937');
+      drawRect(x+4, y+4, 132, 62, '#0f172a');
+      // monitor
+      const working = bot && bot.status==='working';
+      const glow = working ? (tick%30<15 ? '#1d4ed8' : '#2563eb') : '#111827';
+      drawRect(x+46, y+10, 48, 22, '#334155');
+      drawRect(x+48, y+12, 44, 18, glow);
+      // keyboard
+      const kbShift = working ? (tick%8<4 ? 0 : 1) : 0;
+      drawRect(x+44, y+38+kbShift, 52, 8, '#4b5563');
+      // chair
+      drawRect(x+55, y+52, 30, 10, '#374151');
+      // lamp
+      const st = bot ? bot.status : 'offline';
+      const lc = colorByStatus(st);
+      drawRect(x+120, y+8, 10, 10, lc);
+
+      // person icon
+      if (bot) {
+        drawRect(x+65, y+48, 8, 8, '#e5e7eb');
+        txt(bot.name || `Bot ${bot.id}`, x, y+84, '#cbd5e1', 11);
+        txt(bot.role || '-', x, y+97, '#94a3b8', 10);
+      } else {
+        txt('Свободное место', x, y+84, '#64748b', 11);
+      }
+    }
+
+    function drawOffice(bots){
+      ctx.clearRect(0,0,cv.width,cv.height);
+      // floor pattern
+      for(let y=0;y<cv.height;y+=24){
+        for(let x=0;x<cv.width;x+=24){
+          drawRect(x,y,24,24, ((x+y)/24)%2===0 ? '#0f172a' : '#111827');
+        }
+      }
+
+      // center manager desk
+      drawRect(365, 18, 230, 55, '#111827');
+      drawRect(370, 23, 220, 45, '#1f2937');
+      txt('👔 Director (ты)', 390, 50, '#93c5fd', 16);
+
+      const bySlot = [];
+      const list = (bots || []).filter(b=>b.id!=='default');
+      for (let i=0;i<layout.length;i++) bySlot[i] = list[i] || null;
+
+      const tick = Math.floor(Date.now()/120);
+      layout.forEach((s, idx) => drawDesk(s.x, s.y, bySlot[idx], tick));
+
+      // stats
+      const working = (bots||[]).filter(b=>b.status==='working').length;
+      const idle = (bots||[]).filter(b=>b.status==='idle').length;
+      const offline = (bots||[]).filter(b=>b.status==='offline').length;
+      drawRect(18, 18, 220, 64, '#0b1220');
+      txt(`Боты: ${(bots||[]).length}`, 30, 42, '#e2e8f0', 14);
+      txt(`🟢 ${working}   🟡 ${idle}   ⚫ ${offline}`, 30, 64, '#93c5fd', 13);
+    }
+
+    async function fetchData(){
+      const res = await fetch('hq_data.json?t='+Date.now(), {cache:'no-cache'});
+      return await res.json();
+    }
+
+    async function tick(){
+      try{
+        const d = await fetchData();
+        document.getElementById('ts').textContent = `обновлено: ${d.generatedAt || '-'}`;
+        drawOffice(d.bots || []);
+      }catch(e){
+        drawOffice([]);
+      }
+    }
+
+    tick();
+    setInterval(tick, 5000);
+  </script>
+</body>
+</html>
