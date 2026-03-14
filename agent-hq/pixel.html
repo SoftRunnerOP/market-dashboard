@@ -3,87 +3,175 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Pixel Office HQ</title>
+  <title>Pixel Team Office</title>
   <style>
-    body{margin:0;background:#090d14;color:#e5e7eb;font-family:ui-monospace,Menlo,monospace}
-    .wrap{max-width:1180px;margin:0 auto;padding:14px}
-    .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
-    .chip{background:#101826;border:1px solid #2a3346;border-radius:10px;padding:6px 10px;font-size:12px}
-    canvas{width:100%;height:auto;image-rendering:pixelated;background:#0e1520;border:1px solid #263043;border-radius:14px}
-    .legend{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;font-size:12px;color:#a6b0c2}
+    body { margin:0; background:#0c1016; color:#e5e7eb; font-family: ui-monospace, Menlo, monospace; }
+    .wrap { max-width: 1180px; margin: 0 auto; padding: 14px; }
+    .top { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+    .chip { background:#111827; border:1px solid #263043; border-radius:10px; padding:6px 10px; font-size:12px; }
+    canvas { width:100%; height:auto; image-rendering: pixelated; border:1px solid #2a3346; border-radius:14px; background:#121826; }
+    .hint { margin-top:8px; color:#94a3b8; font-size:12px; }
   </style>
 </head>
 <body>
-<div class="wrap">
-  <div class="top">
-    <h2 style="margin:0">🏢 Pixel Office HQ v3</h2>
-    <div id="ts" class="chip">обновление…</div>
+  <div class="wrap">
+    <div class="top">
+      <h2 style="margin:0">🏢 Crypto Start Team — Pixel Office</h2>
+      <div id="ts" class="chip">обновление…</div>
+    </div>
+    <canvas id="cv" width="1120" height="760"></canvas>
+    <div class="hint">🟢 working · 🟡 idle · ⚫ offline · свободные места заполняются новыми ботами автоматически</div>
   </div>
-  <canvas id="cv" width="1120" height="760"></canvas>
-  <div class="legend">
-    <span class="chip">🟢 working</span><span class="chip">🟡 idle</span><span class="chip">⚫ offline</span><span class="chip">мест: 24</span>
-  </div>
-</div>
-<script>
-const cv=document.getElementById('cv'),ctx=cv.getContext('2d');
-const seats=[]; let id=0;
-for(let r=0;r<4;r++) for(let c=0;c<6;c++) seats.push({id:id++,x:55+c*175,y:140+r*145});
 
-function rect(x,y,w,h,c){ctx.fillStyle=c;ctx.fillRect(x,y,w,h)}
-function txt(t,x,y,c='#d1d5db',s=12){ctx.fillStyle=c;ctx.font=`${s}px ui-monospace`;ctx.fillText(t,x,y)}
-function lamp(st){return st==='working'?'#22c55e':st==='idle'?'#f59e0b':'#64748b'}
+  <script>
+    const cv = document.getElementById('cv');
+    const ctx = cv.getContext('2d');
 
-function drawFloor(){
-  for(let y=0;y<cv.height;y+=24){for(let x=0;x<cv.width;x+=24){rect(x,y,24,24,((x+y)/24)%2===0?'#111827':'#0f172a')}}
-  rect(0,0,cv.width,44,'#1f2937'); rect(0,cv.height-30,cv.width,30,'#1f2937'); rect(0,0,24,cv.height,'#1f2937'); rect(cv.width-24,0,24,cv.height,'#1f2937');
-  for(let i=0;i<5;i++){ const x=90+i*210; rect(x,10,150,20,'#1d4ed8'); rect(x+2,12,146,16,'#60a5fa'); }
-}
+    const seats = [];
+    // like reference: 4 rows, 5 columns + central desk
+    let id = 0;
+    for (let r=0; r<4; r++) {
+      for (let c=0; c<5; c++) {
+        seats.push({id:id++, x:120 + c*180, y:120 + r*130});
+      }
+    }
 
-function drawDesk(slot,bot,t){
-  const x=slot.x,y=slot.y,st=bot?bot.status:'offline';
-  rect(x,y,120,64,'#1f2937'); rect(x+3,y+3,114,58,'#0f172a');
-  rect(x+38,y+8,44,24,'#334155'); rect(x+40,y+10,40,20,st==='working'?(t%20<10?'#2563eb':'#1d4ed8'):'#111827');
-  rect(x+45,y+36+(st==='working'&&t%6<3?1:0),35,7,'#4b5563');
-  rect(x+88,y+8,10,10,lamp(st));
+    function rect(x,y,w,h,c){ ctx.fillStyle = c; ctx.fillRect(x,y,w,h); }
+    function txt(t,x,y,c='#111',s=11){ ctx.fillStyle=c; ctx.font=`${s}px ui-monospace`; ctx.fillText(t,x,y); }
 
-  // person (bigger)
-  if(bot){
-    rect(x+52,y+44,10,10,'#f1c27d'); // head
-    rect(x+50,y+54,14,10,'#64748b'); // body
-    if(st==='working'){ rect(x+46,y+56,4,3,'#94a3b8'); rect(x+64,y+56,4,3,'#94a3b8'); }
-    txt(bot.name||'Bot',x,y+79,'#dbeafe',10);
-    txt(bot.role||'-',x,y+91,'#93c5fd',9);
-    if(st==='working') txt('печатает...',x+66,y+91,'#34d399',8);
-    if(st==='idle') txt('ожидание',x+70,y+91,'#fbbf24',8);
-  }else{
-    txt('Свободно',x,y+84,'#64748b',10);
-  }
-}
+    function statusColor(st){
+      if (st==='working') return '#22c55e';
+      if (st==='idle') return '#f59e0b';
+      return '#64748b';
+    }
 
-function drawDirector(d){
-  rect(370,52,380,70,'#0f172a'); rect(374,56,372,62,'#1e293b');
-  txt('👔 Директор: Main',392,82,'#bfdbfe',18);
-  const s=d.summary||{working:0,idle:0,offline:0};
-  txt(`🟢 ${s.working}   🟡 ${s.idle}   ⚫ ${s.offline}`,392,103,'#93c5fd',14);
-}
+    function drawWoodHeader(){
+      // wooden top wall
+      for(let x=0; x<cv.width; x+=8){
+        rect(x,0,8,90, (x/8)%2===0 ? '#8f4e2f' : '#9b5634');
+      }
+      // curtains/windows
+      for(let i=0;i<5;i++){
+        const wx=70+i*205;
+        rect(wx,12,44,30,'#cbd5e1');
+        rect(wx+14,8,16,8,'#e5e7eb');
+      }
+      // bookshelf center
+      rect(500,10,120,62,'#6b3f2a');
+      for(let i=0;i<5;i++){
+        rect(506+i*22,18,14,20,['#60a5fa','#f59e0b','#34d399','#f87171','#a78bfa'][i]);
+        rect(506+i*22,42,14,20,['#f59e0b','#34d399','#f87171','#a78bfa','#60a5fa'][i]);
+      }
+    }
 
-function draw(data){
-  ctx.clearRect(0,0,cv.width,cv.height);
-  drawFloor(); drawDirector(data);
-  const bots=(data.bots||[]).filter(b=>b.role!=='director');
-  const t=Math.floor(Date.now()/120);
-  seats.forEach((s,i)=>drawDesk(s,bots[i]||null,t));
-}
+    function drawTileFloor(){
+      for(let y=90; y<cv.height; y+=20){
+        for(let x=0; x<cv.width; x+=20){
+          const c = ((x/20 + y/20) % 2 === 0) ? '#d8cfb2' : '#d0c6a6';
+          rect(x,y,20,20,c);
+          // grout
+          rect(x,y,1,20,'#c2b893');
+          rect(x,y,20,1,'#c2b893');
+        }
+      }
+    }
 
-async function tick(){
-  try{
-    const r=await fetch('hq_data.json?t='+Date.now(),{cache:'no-cache'}); const d=await r.json();
-    document.getElementById('ts').textContent='обновлено: '+(d.generatedAt||'-');
-    draw(d);
-  }catch{ draw({bots:[],summary:{}}); }
-}
+    function drawPlant(x,y){
+      rect(x+4,y+12,10,10,'#6b7280');
+      rect(x,y,0,0,'#000');
+      rect(x,y+2,18,12,'#15803d');
+      rect(x+3,y-2,12,10,'#22c55e');
+    }
 
-tick(); setInterval(tick,3000);
-</script>
+    function drawDesk(x,y,bot,tick){
+      // white desk block like reference
+      rect(x,y,98,78,'#f3f4f6');
+      rect(x+2,y+2,94,74,'#ffffff');
+      rect(x+2,y+70,94,6,'#d1d5db');
+
+      // monitor
+      const st = bot ? bot.status : 'offline';
+      const active = st==='working';
+      const monColor = active ? (tick%16<8 ? '#1d4ed8' : '#2563eb') : '#374151';
+      rect(x+36,y+28,28,20,'#111827');
+      rect(x+38,y+30,24,16,monColor);
+      rect(x+45,y+48,10,3,'#334155');
+
+      // person top view (head+body)
+      if(bot){
+        rect(x+44,y+14,12,10,['#f1c27d','#e5b98a','#d9a97f'][tick%3]); // head
+        rect(x+42,y+24,16,8,'#4b5563'); // shoulders
+        if (active && tick%6<3) rect(x+33,y+36,4,3,'#64748b'); // typing arm
+        if (active && tick%6>=3) rect(x+64,y+36,4,3,'#64748b');
+      }
+
+      // status lamp right
+      rect(x+86,y+8,8,8,statusColor(st));
+
+      // nameplate
+      if(bot){
+        rect(x+8,y+80,82,12,'#0f172a');
+        txt(bot.name.slice(0,14), x+12, y+89, '#93c5fd', 10);
+      }
+    }
+
+    function normalizeBots(raw){
+      const bots=(raw||[]).filter(b=>b.role!=='director');
+      return bots.map((b,i)=>({
+        id:b.id||`bot-${i}`,
+        name:b.name||`Bot ${i+1}`,
+        status:b.status||'offline',
+        role:b.role||'general'
+      }));
+    }
+
+    function drawScene(data){
+      const tick=Math.floor(Date.now()/120);
+      ctx.clearRect(0,0,cv.width,cv.height);
+      drawWoodHeader();
+      drawTileFloor();
+
+      // top label
+      rect(120,98,180,24,'#dcfce7');
+      txt('✅ Crypto Start Team',130,114,'#166534',13);
+
+      // plants / decor
+      drawPlant(285,360); drawPlant(620,360); drawPlant(905,360);
+
+      const bots=normalizeBots(data.bots);
+      for(let i=0;i<seats.length;i++){
+        drawDesk(seats[i].x,seats[i].y,bots[i]||null,tick+i);
+      }
+
+      // center director desk (bigger)
+      const dx=510,dy=420;
+      drawDesk(dx,dy,{name:'Xenon (Director)',status:'working'},tick);
+
+      // quick counts
+      const w=bots.filter(b=>b.status==='working').length;
+      const idle=bots.filter(b=>b.status==='idle').length;
+      const off=bots.filter(b=>b.status==='offline').length;
+      rect(860,98,220,48,'#0f172a');
+      txt(`WORK ${w}  IDLE ${idle}  OFF ${off}`,872,126,'#93c5fd',12);
+    }
+
+    async function fetchData(){
+      const r=await fetch('hq_data.json?t='+Date.now(),{cache:'no-cache'});
+      return await r.json();
+    }
+
+    async function tick(){
+      try{
+        const d=await fetchData();
+        document.getElementById('ts').textContent='обновлено: '+(d.generatedAt||'-');
+        drawScene(d);
+      }catch{
+        drawScene({bots:[]});
+      }
+    }
+
+    tick();
+    setInterval(tick,3000);
+  </script>
 </body>
 </html>
