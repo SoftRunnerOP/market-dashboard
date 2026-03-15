@@ -1,0 +1,12 @@
+{
+  "max_leverage": 5.0,
+  "max_risk_pct_per_trade": 2.0,
+  "max_notional_usdt": 25.0,
+  "allow_symbols": [
+    "DOGEUSDT",
+    "BTCUSDT",
+    "ETHUSDT"
+  ],
+  "require_manual_confirmation": true,
+  "kill_switch": false
+}
