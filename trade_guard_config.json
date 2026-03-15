@@ -1,12 +1,12 @@
 {
-  "max_leverage": 5.0,
-  "max_risk_pct_per_trade": 2.0,
-  "max_notional_usdt": 25.0,
+  "max_leverage": 10,
+  "max_risk_pct_per_trade": 1.25,
+  "max_notional_usdt": 25,
   "allow_symbols": [
-    "DOGEUSDT",
-    "BTCUSDT",
-    "ETHUSDT"
+    "*"
   ],
-  "require_manual_confirmation": true,
-  "kill_switch": false
+  "require_manual_confirmation": false,
+  "kill_switch": false,
+  "startup_micro_trades": 20,
+  "startup_notional_usdt": 10
 }

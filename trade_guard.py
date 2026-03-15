@@ -16,12 +16,14 @@ CONFIG_PATH = Path('/Users/openmac/.openclaw/workspace/trade_guard_config.json')
 
 @dataclass
 class GuardConfig:
-    max_leverage: float = 5.0
-    max_risk_pct_per_trade: float = 2.0
+    max_leverage: float = 10.0
+    max_risk_pct_per_trade: float = 1.25
     max_notional_usdt: float = 25.0
-    allow_symbols: tuple[str, ...] = ('DOGEUSDT', 'BTCUSDT', 'ETHUSDT')
-    require_manual_confirmation: bool = True
-    kill_switch: bool = False
+    allow_symbols: tuple[str, ...] = ('*',)
+    require_manual_confirmation: bool = False
+    kill_switch: bool = True
+    startup_micro_trades: int = 20
+    startup_notional_usdt: float = 10.0
 
 
 def load_config() -> GuardConfig:
@@ -31,12 +33,14 @@ def load_config() -> GuardConfig:
         return cfg
     raw = json.loads(CONFIG_PATH.read_text(encoding='utf-8'))
     return GuardConfig(
-        max_leverage=float(raw.get('max_leverage', 5.0)),
-        max_risk_pct_per_trade=float(raw.get('max_risk_pct_per_trade', 2.0)),
+        max_leverage=float(raw.get('max_leverage', 10.0)),
+        max_risk_pct_per_trade=float(raw.get('max_risk_pct_per_trade', 1.25)),
         max_notional_usdt=float(raw.get('max_notional_usdt', 25.0)),
-        allow_symbols=tuple(raw.get('allow_symbols', ['DOGEUSDT', 'BTCUSDT', 'ETHUSDT'])),
-        require_manual_confirmation=bool(raw.get('require_manual_confirmation', True)),
-        kill_switch=bool(raw.get('kill_switch', False)),
+        allow_symbols=tuple(raw.get('allow_symbols', ['*'])),
+        require_manual_confirmation=bool(raw.get('require_manual_confirmation', False)),
+        kill_switch=bool(raw.get('kill_switch', True)),
+        startup_micro_trades=int(raw.get('startup_micro_trades', 20)),
+        startup_notional_usdt=float(raw.get('startup_notional_usdt', 10.0)),
     )
 
 
@@ -56,7 +60,7 @@ def validate_proposal(
     if cfg.kill_switch:
         reasons.append('kill_switch is ON')
 
-    if symbol not in cfg.allow_symbols:
+    if '*' not in cfg.allow_symbols and symbol not in cfg.allow_symbols:
         reasons.append(f'symbol {symbol} not allowed')
 
     if side not in {'Buy', 'Sell'}:
