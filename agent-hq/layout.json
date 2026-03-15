@@ -58,6 +58,7 @@
     "stats": { "x": 900, "y": 108, "w": 196, "h": 52 },
     "lounge": { "x": 912, "y": 648 },
     "trading": { "x": 80, "y": 114, "w": 230, "h": 22, "text": "Trading Group" },
-    "design": { "x": 804, "y": 114, "w": 240, "h": 22, "text": "Design Team" }
+    "design": { "x": 804, "y": 114, "w": 240, "h": 22, "text": "Design Team" },
+    "development": { "x": 80, "y": 486, "w": 240, "h": 22, "text": "Development Team" }
   }
 }

@@ -162,20 +162,31 @@
         rect(l.x, l.y, l.w, l.h, '#f5d0fe');
         txt(l.text || 'Design Team', l.x + 8, l.y + 15, '#86198f', 12);
       }
+      if (layout.labels?.development) {
+        const l = layout.labels.development;
+        rect(l.x, l.y, l.w, l.h, '#cffafe');
+        txt(l.text || 'Development Team', l.x + 8, l.y + 15, '#155e75', 12);
+      }
 
       const bots = normalizeBots(data.bots);
       const trading = bots.filter(b => (b.role || '').toLowerCase().includes('trad'));
       const design = bots.filter(b => (b.role || '').toLowerCase().includes('design'));
-      const other = bots.filter(b => !trading.includes(b) && !design.includes(b));
+      const development = bots.filter(b => {
+        const r = (b.role || '').toLowerCase();
+        return r.includes('dev') || r.includes('develop') || r.includes('backend') || r.includes('frontend') || r.includes('engineer');
+      });
+      const other = bots.filter(b => !trading.includes(b) && !design.includes(b) && !development.includes(b));
 
-      // seat regions: left-top for trading, right-top for design, rest for others
+      // seat regions
       const slotBots = new Array(layout.desks.length).fill(null);
       const tradingSlots = [0,1,2,6,7,8];
       const designSlots  = [3,4,5,9,10,11];
-      const otherSlots = layout.desks.map((_,i)=>i).filter(i => !tradingSlots.includes(i) && !designSlots.includes(i));
+      const devSlots     = [12,13,14,15,16,17];
+      const otherSlots = layout.desks.map((_,i)=>i).filter(i => !tradingSlots.includes(i) && !designSlots.includes(i) && !devSlots.includes(i));
 
       trading.forEach((b,idx)=>{ if (tradingSlots[idx] !== undefined) slotBots[tradingSlots[idx]] = b; });
       design.forEach((b,idx)=>{ if (designSlots[idx] !== undefined) slotBots[designSlots[idx]] = b; });
+      development.forEach((b,idx)=>{ if (devSlots[idx] !== undefined) slotBots[devSlots[idx]] = b; });
       other.forEach((b,idx)=>{ if (otherSlots[idx] !== undefined) slotBots[otherSlots[idx]] = b; });
 
       for (let i = 0; i < layout.desks.length; i++) {
