@@ -1,0 +1,8 @@
+{
+  "channel": "@unlimited_trading",
+  "sources": [
+    "https://t.me/crypto_hd",
+    "https://t.me/web3ru"
+  ],
+  "notes": "Initial sources for CryptoNewsBot. Expand over time."
+}
