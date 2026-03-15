@@ -126,6 +126,12 @@ def place_micro_trade(symbol='DOGEUSDT', side='Buy', leverage=5, notional_usdt=1
     if qty < min_qty:
         qty = min_qty
 
+    final_notional = qty * px
+    if final_notional > notional_usdt * 1.5:
+        raise RuntimeError(
+            f'Min order size too large for {symbol}: final_notional={final_notional:.4f} > target={notional_usdt:.4f}'
+        )
+
     # set leverage (isolated)
     c.signed_post('/v5/position/set-leverage', {
         'category': 'linear',
