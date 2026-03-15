@@ -6,6 +6,7 @@
 - main: `memory/bots/main.md`
 - traderbot: `memory/bots/traderbot.md`
 - graphicbot: `memory/bots/graphicbot.md`
+- newsbot: `memory/bots/newsbot.md`
 
 ## Обязательный preflight (перед ЛЮБЫМ действием)
 1. Прочитать свой файл архива.
