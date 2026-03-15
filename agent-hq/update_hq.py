@@ -32,7 +32,10 @@ def load_bots_from_config():
             "name": acc.get("name") or acc_id,
             "enabled": bool(acc.get("enabled", True)),
             "username": acc.get("username") or "",
-            "role": "trading" if "trader" in acc_id else ("design/marketing" if "graphic" in acc_id else "general")
+            "role": (
+                "trading" if "trader" in acc_id else (
+                "design/marketing" if "graphic" in acc_id else (
+                "development" if ("archiv" in acc_id or "archive" in acc_id or "dev" in acc_id) else "general")))
         })
     # Ensure one director (usually default account)
     if not any(b.get('id') == 'default' for b in bots):
