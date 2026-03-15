@@ -27,43 +27,50 @@
     const cv = document.getElementById('cv');
     const ctx = cv.getContext('2d');
 
-    // Layout intentionally matched closer to your reference scene
+    // Layout closer to reference: 2 top rows + center + 2 left rows + obvious lounge
     const deskSlots = [
       // top row
-      {x:90,y:130},{x:250,y:130},{x:410,y:130},         {x:650,y:130},{x:810,y:130},{x:970,y:130},
+      {x:80,y:130},{x:250,y:130},{x:420,y:130},{x:650,y:130},{x:820,y:130},{x:990,y:130},
       // second row
-      {x:90,y:250},{x:250,y:250},{x:410,y:250},         {x:650,y:250},{x:810,y:250},{x:970,y:250},
+      {x:80,y:250},{x:250,y:250},{x:420,y:250},{x:650,y:250},{x:820,y:250},{x:990,y:250},
       // center director
-      {x:490,y:360, director:true},
+      {x:500,y:370,director:true},
       // bottom-left block
-      {x:90,y:500},{x:250,y:500},{x:410,y:500},
-      {x:90,y:620},{x:250,y:620},{x:410,y:620}
+      {x:80,y:510},{x:250,y:510},{x:420,y:510},
+      {x:80,y:630},{x:250,y:630},{x:420,y:630}
     ];
 
-    function rect(x,y,w,h,c){ ctx.fillStyle = c; ctx.fillRect(x,y,w,h); }
+    function rect(x,y,w,h,c){ ctx.fillStyle=c; ctx.fillRect(x,y,w,h); }
     function txt(t,x,y,c='#111',s=11){ ctx.fillStyle=c; ctx.font=`${s}px ui-monospace`; ctx.fillText(t,x,y); }
     function statusColor(st){ return st==='working' ? '#22c55e' : st==='idle' ? '#f59e0b' : '#64748b'; }
 
-    function drawWoodHeader(){
-      for(let x=0; x<cv.width; x+=8) rect(x,0,8,96,(x/8)%2===0?'#8f4e2f':'#9b5634');
-      // curtains/windows
-      const win=[80,260,440,760,940];
-      for(const wx of win){ rect(wx,12,58,34,'#cbd5e1'); rect(wx+20,8,18,8,'#e5e7eb'); }
-      // bookshelf center
-      rect(500,10,120,72,'#6b3f2a');
+    function drawHeaderWall(){
+      // realistic top wall with wood strip
+      rect(0,0,cv.width,100,'#8d5530');
+      for(let x=0;x<cv.width;x+=10) rect(x,0,2,100,'#7b4628');
+      // windows/frames
+      const wx=[70,250,430,760,940];
+      for(const x of wx){
+        rect(x,12,58,36,'#cbd5e1');
+        rect(x+2,14,54,32,'#f8fafc');
+      }
+      // center bookshelf
+      rect(500,10,124,78,'#6b3f2a');
       for(let i=0;i<5;i++){
-        rect(506+i*22,18,14,22,['#60a5fa','#f59e0b','#34d399','#f87171','#a78bfa'][i]);
-        rect(506+i*22,46,14,22,['#f59e0b','#34d399','#f87171','#a78bfa','#60a5fa'][i]);
+        rect(508+i*23,18,14,24,['#60a5fa','#f59e0b','#34d399','#f87171','#a78bfa'][i]);
+        rect(508+i*23,50,14,24,['#f59e0b','#34d399','#f87171','#a78bfa','#60a5fa'][i]);
       }
     }
 
-    function drawTileFloor(){
-      for(let y=96; y<cv.height; y+=20){
-        for(let x=0; x<cv.width; x+=20){
-          const c=((x/20+y/20)%2===0)?'#d8cfb2':'#d0c6a6';
-          rect(x,y,20,20,c); rect(x,y,1,20,'#c2b893'); rect(x,y,20,1,'#c2b893');
-        }
-      }
+    function drawFloor(){
+      // cleaner tile grid (not crooked)
+      rect(0,100,cv.width,cv.height-100,'#d8cfb2');
+      for(let y=100; y<cv.height; y+=20){ rect(0,y,cv.width,1,'#c4ba95'); }
+      for(let x=0; x<cv.width; x+=20){ rect(x,100,1,cv.height-100,'#c4ba95'); }
+
+      // side walls accents
+      rect(0,100,20,cv.height-100,'#1f2937');
+      rect(cv.width-20,100,20,cv.height-100,'#1f2937');
     }
 
     function drawPlant(x,y){
@@ -72,50 +79,65 @@
       rect(x+4,y-4,12,10,'#22c55e');
     }
 
-    function drawLamp(x,y){
-      rect(x+5,y,3,20,'#6b7280');
-      rect(x,y+16,12,4,'#9ca3af');
-      rect(x+2,y-2,8,4,'#fef3c7');
+    function drawSofa(x,y){
+      rect(x,y,90,26,'#1e3a8a');
+      rect(x+4,y+4,82,18,'#3b82f6');
+      rect(x+8,y+20,74,6,'#1e40af');
     }
 
-    function drawFireExtinguisher(x,y){
-      rect(x,y,6,16,'#ef4444');
-      rect(x+1,y-2,4,2,'#9ca3af');
-      rect(x+5,y+2,2,2,'#9ca3af');
+    function drawLounge(){
+      // clearly visible lounge zone in center-left
+      rect(560,470,220,150,'#d6ceb0');
+      rect(565,475,210,140,'#cec5a6');
+      drawSofa(580,505);
+      drawSofa(690,505);
+      rect(640,560,80,20,'#6b7280'); // coffee table
+      drawPlant(590,585); drawPlant(730,585);
+      txt('Lounge', 645, 600, '#334155', 12);
+    }
+
+    function drawAvatar(x,y,status,tick){
+      // external worker icon near desk
+      rect(x,y,14,12,['#f1c27d','#e5b98a','#d9a97f'][tick%3]); // head
+      rect(x-1,y+11,16,8,'#4b5563'); // body
+      if(status==='working'){
+        rect(x-4,y+14,3,2,'#64748b');
+        rect(x+15,y+14,3,2,'#64748b');
+      }
+      if(status==='offline' && tick%20<10) txt('zzz', x+18, y+7, '#64748b', 9);
     }
 
     function drawDesk(x,y,bot,tick,isDirector=false){
       const st = bot ? bot.status : 'offline';
       const active = st==='working';
 
-      // desk with chair like reference
+      // desk
       rect(x,y,110,84,'#f3f4f6');
       rect(x+3,y+3,104,78,'#ffffff');
       rect(x+3,y+75,104,6,'#d1d5db');
 
-      // laptop area
+      // laptop/screen
+      rect(x+42,y+40,26,14, active?(tick%16<8?'#2563eb':'#1d4ed8'):'#374151');
       rect(x+40,y+38,30,18,'#111827');
-      rect(x+42,y+40,26,14,active?(tick%16<8?'#2563eb':'#1d4ed8'):'#374151');
 
-      // pixel face (top-view)
-      if(bot){
-        rect(x+47,y+17,16,12,['#f1c27d','#e5b98a','#d9a97f'][tick%3]);
-        rect(x+50,y+21,2,2,'#0b0b0b');
-        rect(x+58,y+21,2,2,'#0b0b0b');
-        if(st==='working') rect(x+54,y+26,3,1,'#0b0b0b');
-        else if(st==='idle') rect(x+53,y+26,5,1,'#0b0b0b');
-        else rect(x+54,y+26,3,1,'#64748b');
-      }
+      // face card on desk
+      rect(x+47,y+17,16,12,['#f1c27d','#e5b98a','#d9a97f'][tick%3]);
+      rect(x+50,y+21,2,2,'#0b0b0b'); rect(x+58,y+21,2,2,'#0b0b0b');
+      if(st==='working') rect(x+54,y+26,3,1,'#0b0b0b');
+      else if(st==='idle') rect(x+53,y+26,5,1,'#0b0b0b');
+      else rect(x+54,y+26,3,1,'#64748b');
 
-      // hands typing
-      if(active && tick%6<3){ rect(x+36,y+46,4,3,'#94a3b8'); }
-      if(active && tick%6>=3){ rect(x+70,y+46,4,3,'#94a3b8'); }
+      // typing motion
+      if(active && tick%6<3) rect(x+36,y+46,4,3,'#94a3b8');
+      if(active && tick%6>=3) rect(x+70,y+46,4,3,'#94a3b8');
 
-      // lamp indicator top-right desk
+      // lamp status
       rect(x+96,y+8,8,8,statusColor(st));
-      if(st==='offline' && bot && tick%20<10) txt('zzz', x+76, y+18, '#64748b', 9);
 
-      // nameplate colored by status
+      // external worker icon (requested)
+      if(bot) drawAvatar(x+84, y+50, st, tick);
+
+      // nickname status color
       if(bot){
         const nickBg = st==='working' ? '#14532d' : (st==='idle' ? '#7c2d12' : '#334155');
         const nickFg = st==='working' ? '#86efac' : (st==='idle' ? '#fdba74' : '#cbd5e1');
@@ -133,17 +155,16 @@
     function drawScene(data){
       const tick=Math.floor(Date.now()/120);
       ctx.clearRect(0,0,cv.width,cv.height);
-      drawWoodHeader();
-      drawTileFloor();
+      drawHeaderWall();
+      drawFloor();
 
       // decor
-      drawPlant(520,305); drawPlant(390,360); drawPlant(700,360);
-      drawPlant(390,440); drawPlant(700,440);
-      drawLamp(520,250); drawLamp(620,250);
-      drawFireExtinguisher(1085,205); drawFireExtinguisher(1085,545);
+      drawPlant(540,305); drawPlant(400,360); drawPlant(710,360);
+      drawPlant(400,430); drawPlant(710,430);
+      drawLounge();
 
       // team label
-      rect(170,110,190,24,'#dcfce7'); txt('✅ Crypto Start Team',182,126,'#166534',13);
+      rect(170,110,210,24,'#dcfce7'); txt('✅ Crypto Start Team',182,126,'#166534',13);
 
       const bots = normalizeBots(data.bots);
       let bi=0;
@@ -156,7 +177,6 @@
         }
       }
 
-      // summary panel
       const w=bots.filter(b=>b.status==='working').length;
       const idle=bots.filter(b=>b.status==='idle').length;
       const off=bots.filter(b=>b.status==='offline').length;
