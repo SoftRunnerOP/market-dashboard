@@ -1,10 +1,10 @@
 {
-  "generatedAt": "2026-03-15T14:38:38",
+  "generatedAt": "2026-03-15T14:39:36",
   "summary": {
     "bots": 5,
-    "working": 1,
-    "idle": 2,
-    "offline": 2
+    "working": 3,
+    "idle": 1,
+    "offline": 1
   },
   "bots": [
     {
@@ -22,7 +22,7 @@
       "enabled": true,
       "username": "",
       "role": "trading",
-      "status": "idle",
+      "status": "working",
       "activeKey": "agent:main:telegram:traderbot:direct:505019648"
     },
     {
@@ -40,7 +40,7 @@
       "enabled": true,
       "username": "",
       "role": "development",
-      "status": "offline",
+      "status": "working",
       "activeKey": "agent:main:telegram:archivistbot:direct:505019648"
     },
     {
@@ -87,48 +87,72 @@
       "recent": [
         {
           "agentId": "main",
-          "key": "agent:main:cron:9be5a7b2-60ae-4b8b-815e-c2cbb5222ed2",
+          "key": "agent:main:telegram:archivistbot:direct:505019648",
           "kind": "direct",
-          "sessionId": "5fe4cc20-4968-453d-b7d0-d175abce23da",
-          "updatedAt": 1773574680009,
-          "age": 33340,
+          "sessionId": "0f8590fb-e4a5-4917-9068-0b76b3d88067",
+          "updatedAt": 1773574747810,
+          "age": 22412,
           "systemSent": true,
-          "inputTokens": 538,
-          "outputTokens": 383,
-          "cacheRead": 18304,
+          "abortedLastRun": false,
+          "inputTokens": 1208,
+          "outputTokens": 674,
+          "cacheRead": 41600,
           "cacheWrite": 0,
-          "totalTokens": 9619,
+          "totalTokens": 42071,
           "totalTokensFresh": true,
-          "remainingTokens": 262381,
-          "percentUsed": 4,
+          "remainingTokens": 229929,
+          "percentUsed": 15,
           "model": "gpt-5.3-codex",
           "contextTokens": 272000,
           "flags": [
             "system",
-            "id:5fe4cc20-4968-453d-b7d0-d175abce23da"
+            "id:0f8590fb-e4a5-4917-9068-0b76b3d88067"
           ]
         },
         {
           "agentId": "main",
-          "key": "agent:main:cron:9be5a7b2-60ae-4b8b-815e-c2cbb5222ed2:run:5fe4cc20-4968-453d-b7d0-d175abce23da",
+          "key": "agent:main:cron:9be5a7b2-60ae-4b8b-815e-c2cbb5222ed2",
           "kind": "direct",
-          "sessionId": "5fe4cc20-4968-453d-b7d0-d175abce23da",
-          "updatedAt": 1773574680009,
-          "age": 33340,
+          "sessionId": "22879ffd-53a2-4970-b082-1d6a01906890",
+          "updatedAt": 1773574740010,
+          "age": 30212,
           "systemSent": true,
-          "inputTokens": 538,
-          "outputTokens": 383,
-          "cacheRead": 18304,
+          "inputTokens": 8129,
+          "outputTokens": 351,
+          "cacheRead": 10624,
           "cacheWrite": 0,
-          "totalTokens": 9619,
+          "totalTokens": 9530,
           "totalTokensFresh": true,
-          "remainingTokens": 262381,
+          "remainingTokens": 262470,
           "percentUsed": 4,
           "model": "gpt-5.3-codex",
           "contextTokens": 272000,
           "flags": [
             "system",
-            "id:5fe4cc20-4968-453d-b7d0-d175abce23da"
+            "id:22879ffd-53a2-4970-b082-1d6a01906890"
+          ]
+        },
+        {
+          "agentId": "main",
+          "key": "agent:main:cron:9be5a7b2-60ae-4b8b-815e-c2cbb5222ed2:run:22879ffd-53a2-4970-b082-1d6a01906890",
+          "kind": "direct",
+          "sessionId": "22879ffd-53a2-4970-b082-1d6a01906890",
+          "updatedAt": 1773574740010,
+          "age": 30212,
+          "systemSent": true,
+          "inputTokens": 8129,
+          "outputTokens": 351,
+          "cacheRead": 10624,
+          "cacheWrite": 0,
+          "totalTokens": 9530,
+          "totalTokensFresh": true,
+          "remainingTokens": 262470,
+          "percentUsed": 4,
+          "model": "gpt-5.3-codex",
+          "contextTokens": 272000,
+          "flags": [
+            "system",
+            "id:22879ffd-53a2-4970-b082-1d6a01906890"
           ]
         },
         {
@@ -136,8 +160,8 @@
           "key": "agent:main:telegram:newsbot:direct:505019648",
           "kind": "direct",
           "sessionId": "a5f0e176-e9a8-4af8-8de7-ee700c764903",
-          "updatedAt": 1773574670210,
-          "age": 43139,
+          "updatedAt": 1773574731151,
+          "age": 39071,
           "systemSent": true,
           "abortedLastRun": false,
           "inputTokens": 4455,
@@ -157,11 +181,58 @@
         },
         {
           "agentId": "main",
+          "key": "agent:main:telegram:traderbot:direct:505019648",
+          "kind": "direct",
+          "sessionId": "8855d41f-264b-4169-adc4-df771ea222f9",
+          "updatedAt": 1773574724207,
+          "age": 46015,
+          "systemSent": true,
+          "abortedLastRun": false,
+          "inputTokens": 4914,
+          "outputTokens": 1238,
+          "cacheRead": 107648,
+          "cacheWrite": 0,
+          "totalTokens": 108088,
+          "totalTokensFresh": true,
+          "remainingTokens": 163912,
+          "percentUsed": 40,
+          "model": "gpt-5.3-codex",
+          "contextTokens": 272000,
+          "flags": [
+            "system",
+            "id:8855d41f-264b-4169-adc4-df771ea222f9"
+          ]
+        },
+        {
+          "agentId": "main",
+          "key": "agent:main:cron:9be5a7b2-60ae-4b8b-815e-c2cbb5222ed2:run:5fe4cc20-4968-453d-b7d0-d175abce23da",
+          "kind": "direct",
+          "sessionId": "5fe4cc20-4968-453d-b7d0-d175abce23da",
+          "updatedAt": 1773574680009,
+          "age": 90213,
+          "systemSent": true,
+          "inputTokens": 8129,
+          "outputTokens": 351,
+          "cacheRead": 10624,
+          "cacheWrite": 0,
+          "totalTokens": 9530,
+          "totalTokensFresh": true,
+          "remainingTokens": 262470,
+          "percentUsed": 4,
+          "model": "gpt-5.3-codex",
+          "contextTokens": 272000,
+          "flags": [
+            "system",
+            "id:5fe4cc20-4968-453d-b7d0-d175abce23da"
+          ]
+        },
+        {
+          "agentId": "main",
           "key": "agent:main:cron:9be5a7b2-60ae-4b8b-815e-c2cbb5222ed2:run:417cdfd0-206c-4c5a-a999-237b5fcd1804",
           "kind": "direct",
           "sessionId": "417cdfd0-206c-4c5a-a999-237b5fcd1804",
           "updatedAt": 1773574620010,
-          "age": 93339,
+          "age": 150212,
           "systemSent": true,
           "inputTokens": 538,
           "outputTokens": 383,
@@ -184,7 +255,7 @@
           "kind": "direct",
           "sessionId": "c480f794-09e5-44f3-b7d8-621d2cc2a2f1",
           "updatedAt": 1773574560008,
-          "age": 153341,
+          "age": 210214,
           "systemSent": true,
           "inputTokens": 401,
           "outputTokens": 439,
@@ -207,7 +278,7 @@
           "kind": "direct",
           "sessionId": "a67d4e0e-a15b-4512-9995-04e8bccb405f",
           "updatedAt": 1773574500010,
-          "age": 213339,
+          "age": 270212,
           "systemSent": true,
           "inputTokens": 389,
           "outputTokens": 316,
@@ -230,7 +301,7 @@
           "kind": "direct",
           "sessionId": "23971803-b958-486f-9738-5189e8fbb8d9",
           "updatedAt": 1773574440010,
-          "age": 273339,
+          "age": 330212,
           "systemSent": true,
           "inputTokens": 5887,
           "outputTokens": 362,
@@ -246,75 +317,6 @@
             "system",
             "id:23971803-b958-486f-9738-5189e8fbb8d9"
           ]
-        },
-        {
-          "agentId": "main",
-          "key": "agent:main:cron:9be5a7b2-60ae-4b8b-815e-c2cbb5222ed2:run:1c0df57f-d1f8-432e-88a6-a3800bd49ac5",
-          "kind": "direct",
-          "sessionId": "1c0df57f-d1f8-432e-88a6-a3800bd49ac5",
-          "updatedAt": 1773574360725,
-          "age": 352624,
-          "systemSent": true,
-          "inputTokens": 597,
-          "outputTokens": 360,
-          "cacheRead": 18176,
-          "cacheWrite": 0,
-          "totalTokens": 9550,
-          "totalTokensFresh": true,
-          "remainingTokens": 262450,
-          "percentUsed": 4,
-          "model": "gpt-5.3-codex",
-          "contextTokens": 272000,
-          "flags": [
-            "system",
-            "id:1c0df57f-d1f8-432e-88a6-a3800bd49ac5"
-          ]
-        },
-        {
-          "agentId": "main",
-          "key": "agent:main:cron:a6cbb3da-bc7b-446a-963c-98a534086909",
-          "kind": "direct",
-          "sessionId": "79180dd6-9599-40cc-a9c8-b4606dcc6552",
-          "updatedAt": 1773574320186,
-          "age": 393163,
-          "systemSent": true,
-          "inputTokens": 16281,
-          "outputTokens": 1350,
-          "cacheRead": 33280,
-          "cacheWrite": 0,
-          "totalTokens": 19525,
-          "totalTokensFresh": true,
-          "remainingTokens": 252475,
-          "percentUsed": 7,
-          "model": "gpt-5.3-codex",
-          "contextTokens": 272000,
-          "flags": [
-            "system",
-            "id:79180dd6-9599-40cc-a9c8-b4606dcc6552"
-          ]
-        },
-        {
-          "agentId": "main",
-          "key": "agent:main:cron:a6cbb3da-bc7b-446a-963c-98a534086909:run:79180dd6-9599-40cc-a9c8-b4606dcc6552",
-          "kind": "direct",
-          "sessionId": "79180dd6-9599-40cc-a9c8-b4606dcc6552",
-          "updatedAt": 1773574320186,
-          "age": 393163,
-          "systemSent": true,
-          "inputTokens": 16281,
-          "outputTokens": 1350,
-          "cacheRead": 33280,
-          "cacheWrite": 0,
-          "totalTokens": 19525,
-          "totalTokensFresh": true,
-          "remainingTokens": 252475,
-          "percentUsed": 7,
-          "model": "gpt-5.3-codex",
-          "contextTokens": 272000,
-          "flags": [
-            "system",
-            "id:79180dd6-9599-40cc-a9c8-b4606dcc6552"
-          ]
         }
       ],
       "byAgent": [
@@ -325,48 +327,72 @@
           "recent": [
             {
               "agentId": "main",
-              "key": "agent:main:cron:9be5a7b2-60ae-4b8b-815e-c2cbb5222ed2",
+              "key": "agent:main:telegram:archivistbot:direct:505019648",
               "kind": "direct",
-              "sessionId": "5fe4cc20-4968-453d-b7d0-d175abce23da",
-              "updatedAt": 1773574680009,
-              "age": 33340,
+              "sessionId": "0f8590fb-e4a5-4917-9068-0b76b3d88067",
+              "updatedAt": 1773574747810,
+              "age": 22412,
               "systemSent": true,
-              "inputTokens": 538,
-              "outputTokens": 383,
-              "cacheRead": 18304,
+              "abortedLastRun": false,
+              "inputTokens": 1208,
+              "outputTokens": 674,
+              "cacheRead": 41600,
               "cacheWrite": 0,
-              "totalTokens": 9619,
+              "totalTokens": 42071,
               "totalTokensFresh": true,
-              "remainingTokens": 262381,
-              "percentUsed": 4,
+              "remainingTokens": 229929,
+              "percentUsed": 15,
               "model": "gpt-5.3-codex",
               "contextTokens": 272000,
               "flags": [
                 "system",
-                "id:5fe4cc20-4968-453d-b7d0-d175abce23da"
+                "id:0f8590fb-e4a5-4917-9068-0b76b3d88067"
               ]
             },
             {
               "agentId": "main",
-              "key": "agent:main:cron:9be5a7b2-60ae-4b8b-815e-c2cbb5222ed2:run:5fe4cc20-4968-453d-b7d0-d175abce23da",
+              "key": "agent:main:cron:9be5a7b2-60ae-4b8b-815e-c2cbb5222ed2",
               "kind": "direct",
-              "sessionId": "5fe4cc20-4968-453d-b7d0-d175abce23da",
-              "updatedAt": 1773574680009,
-              "age": 33340,
+              "sessionId": "22879ffd-53a2-4970-b082-1d6a01906890",
+              "updatedAt": 1773574740010,
+              "age": 30212,
               "systemSent": true,
-              "inputTokens": 538,
-              "outputTokens": 383,
-              "cacheRead": 18304,
+              "inputTokens": 8129,
+              "outputTokens": 351,
+              "cacheRead": 10624,
               "cacheWrite": 0,
-              "totalTokens": 9619,
+              "totalTokens": 9530,
               "totalTokensFresh": true,
-              "remainingTokens": 262381,
+              "remainingTokens": 262470,
               "percentUsed": 4,
               "model": "gpt-5.3-codex",
               "contextTokens": 272000,
               "flags": [
                 "system",
-                "id:5fe4cc20-4968-453d-b7d0-d175abce23da"
+                "id:22879ffd-53a2-4970-b082-1d6a01906890"
+              ]
+            },
+            {
+              "agentId": "main",
+              "key": "agent:main:cron:9be5a7b2-60ae-4b8b-815e-c2cbb5222ed2:run:22879ffd-53a2-4970-b082-1d6a01906890",
+              "kind": "direct",
+              "sessionId": "22879ffd-53a2-4970-b082-1d6a01906890",
+              "updatedAt": 1773574740010,
+              "age": 30212,
+              "systemSent": true,
+              "inputTokens": 8129,
+              "outputTokens": 351,
+              "cacheRead": 10624,
+              "cacheWrite": 0,
+              "totalTokens": 9530,
+              "totalTokensFresh": true,
+              "remainingTokens": 262470,
+              "percentUsed": 4,
+              "model": "gpt-5.3-codex",
+              "contextTokens": 272000,
+              "flags": [
+                "system",
+                "id:22879ffd-53a2-4970-b082-1d6a01906890"
               ]
             },
             {
@@ -374,8 +400,8 @@
               "key": "agent:main:telegram:newsbot:direct:505019648",
               "kind": "direct",
               "sessionId": "a5f0e176-e9a8-4af8-8de7-ee700c764903",
-              "updatedAt": 1773574670210,
-              "age": 43139,
+              "updatedAt": 1773574731151,
+              "age": 39071,
               "systemSent": true,
               "abortedLastRun": false,
               "inputTokens": 4455,
@@ -395,11 +421,58 @@
             },
             {
               "agentId": "main",
+              "key": "agent:main:telegram:traderbot:direct:505019648",
+              "kind": "direct",
+              "sessionId": "8855d41f-264b-4169-adc4-df771ea222f9",
+              "updatedAt": 1773574724207,
+              "age": 46015,
+              "systemSent": true,
+              "abortedLastRun": false,
+              "inputTokens": 4914,
+              "outputTokens": 1238,
+              "cacheRead": 107648,
+              "cacheWrite": 0,
+              "totalTokens": 108088,
+              "totalTokensFresh": true,
+              "remainingTokens": 163912,
+              "percentUsed": 40,
+              "model": "gpt-5.3-codex",
+              "contextTokens": 272000,
+              "flags": [
+                "system",
+                "id:8855d41f-264b-4169-adc4-df771ea222f9"
+              ]
+            },
+            {
+              "agentId": "main",
+              "key": "agent:main:cron:9be5a7b2-60ae-4b8b-815e-c2cbb5222ed2:run:5fe4cc20-4968-453d-b7d0-d175abce23da",
+              "kind": "direct",
+              "sessionId": "5fe4cc20-4968-453d-b7d0-d175abce23da",
+              "updatedAt": 1773574680009,
+              "age": 90213,
+              "systemSent": true,
+              "inputTokens": 8129,
+              "outputTokens": 351,
+              "cacheRead": 10624,
+              "cacheWrite": 0,
+              "totalTokens": 9530,
+              "totalTokensFresh": true,
+              "remainingTokens": 262470,
+              "percentUsed": 4,
+              "model": "gpt-5.3-codex",
+              "contextTokens": 272000,
+              "flags": [
+                "system",
+                "id:5fe4cc20-4968-453d-b7d0-d175abce23da"
+              ]
+            },
+            {
+              "agentId": "main",
               "key": "agent:main:cron:9be5a7b2-60ae-4b8b-815e-c2cbb5222ed2:run:417cdfd0-206c-4c5a-a999-237b5fcd1804",
               "kind": "direct",
               "sessionId": "417cdfd0-206c-4c5a-a999-237b5fcd1804",
               "updatedAt": 1773574620010,
-              "age": 93339,
+              "age": 150212,
               "systemSent": true,
               "inputTokens": 538,
               "outputTokens": 383,
@@ -422,7 +495,7 @@
               "kind": "direct",
               "sessionId": "c480f794-09e5-44f3-b7d8-621d2cc2a2f1",
               "updatedAt": 1773574560008,
-              "age": 153341,
+              "age": 210214,
               "systemSent": true,
               "inputTokens": 401,
               "outputTokens": 439,
@@ -445,7 +518,7 @@
               "kind": "direct",
               "sessionId": "a67d4e0e-a15b-4512-9995-04e8bccb405f",
               "updatedAt": 1773574500010,
-              "age": 213339,
+              "age": 270212,
               "systemSent": true,
               "inputTokens": 389,
               "outputTokens": 316,
@@ -468,7 +541,7 @@
               "kind": "direct",
               "sessionId": "23971803-b958-486f-9738-5189e8fbb8d9",
               "updatedAt": 1773574440010,
-              "age": 273339,
+              "age": 330212,
               "systemSent": true,
               "inputTokens": 5887,
               "outputTokens": 362,
@@ -483,75 +556,6 @@
               "flags": [
                 "system",
                 "id:23971803-b958-486f-9738-5189e8fbb8d9"
-              ]
-            },
-            {
-              "agentId": "main",
-              "key": "agent:main:cron:9be5a7b2-60ae-4b8b-815e-c2cbb5222ed2:run:1c0df57f-d1f8-432e-88a6-a3800bd49ac5",
-              "kind": "direct",
-              "sessionId": "1c0df57f-d1f8-432e-88a6-a3800bd49ac5",
-              "updatedAt": 1773574360725,
-              "age": 352624,
-              "systemSent": true,
-              "inputTokens": 597,
-              "outputTokens": 360,
-              "cacheRead": 18176,
-              "cacheWrite": 0,
-              "totalTokens": 9550,
-              "totalTokensFresh": true,
-              "remainingTokens": 262450,
-              "percentUsed": 4,
-              "model": "gpt-5.3-codex",
-              "contextTokens": 272000,
-              "flags": [
-                "system",
-                "id:1c0df57f-d1f8-432e-88a6-a3800bd49ac5"
-              ]
-            },
-            {
-              "agentId": "main",
-              "key": "agent:main:cron:a6cbb3da-bc7b-446a-963c-98a534086909",
-              "kind": "direct",
-              "sessionId": "79180dd6-9599-40cc-a9c8-b4606dcc6552",
-              "updatedAt": 1773574320186,
-              "age": 393163,
-              "systemSent": true,
-              "inputTokens": 16281,
-              "outputTokens": 1350,
-              "cacheRead": 33280,
-              "cacheWrite": 0,
-              "totalTokens": 19525,
-              "totalTokensFresh": true,
-              "remainingTokens": 252475,
-              "percentUsed": 7,
-              "model": "gpt-5.3-codex",
-              "contextTokens": 272000,
-              "flags": [
-                "system",
-                "id:79180dd6-9599-40cc-a9c8-b4606dcc6552"
-              ]
-            },
-            {
-              "agentId": "main",
-              "key": "agent:main:cron:a6cbb3da-bc7b-446a-963c-98a534086909:run:79180dd6-9599-40cc-a9c8-b4606dcc6552",
-              "kind": "direct",
-              "sessionId": "79180dd6-9599-40cc-a9c8-b4606dcc6552",
-              "updatedAt": 1773574320186,
-              "age": 393163,
-              "systemSent": true,
-              "inputTokens": 16281,
-              "outputTokens": 1350,
-              "cacheRead": 33280,
-              "cacheWrite": 0,
-              "totalTokens": 19525,
-              "totalTokensFresh": true,
-              "remainingTokens": 252475,
-              "percentUsed": 7,
-              "model": "gpt-5.3-codex",
-              "contextTokens": 272000,
-              "flags": [
-                "system",
-                "id:79180dd6-9599-40cc-a9c8-b4606dcc6552"
               ]
             }
           ]
@@ -576,7 +580,8 @@
         "reason": "lockfile missing"
       },
       "registry": {
-        "latestVersion": "2026.3.13"
+        "latestVersion": null,
+        "error": "AbortError: This operation was aborted"
       }
     },
     "updateChannel": "stable",
@@ -645,7 +650,7 @@
       "urlSource": "local loopback",
       "misconfigured": false,
       "reachable": true,
-      "connectLatencyMs": 529,
+      "connectLatencyMs": 525,
       "self": {
         "host": "Mac-mini-OpenMac.local",
         "ip": "192.168.2.9",
@@ -680,15 +685,15 @@
           "bootstrapPending": true,
           "sessionsPath": "/Users/openmac/.openclaw/agents/main/sessions/sessions.json",
           "sessionsCount": 1520,
-          "lastUpdatedAt": 1773574680009,
-          "lastActiveAgeMs": 33334
+          "lastUpdatedAt": 1773574747810,
+          "lastActiveAgeMs": 22407
         }
       ],
       "totalSessions": 1520,
       "bootstrapPendingCount": 1
     },
     "securityAudit": {
-      "ts": 1773574716222,
+      "ts": 1773574773512,
       "summary": {
         "critical": 0,
         "warn": 2,
